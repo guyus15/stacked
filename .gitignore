@@ -1,6 +1,6 @@
-./bin/
-./libs/
-./objs/
+bin/
+libs/
+obj/
 
 *.make
 Makefile

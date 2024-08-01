@@ -1,9 +1,9 @@
-workspace "imgui"
+workspace "stacked"
     configurations { "Debug", "Release" }
     architecture "x86_64"
-    startproject "imgui"
+    startproject "stacked"
 
-project "imgui"
+project "stacked"
     kind "StaticLib"
     language "C++"
     cppdialect "C++2a"
@@ -64,8 +64,8 @@ project "sandbox"
         "GLFW",
         "dl",
         "pthread",
-        "imgui",
-        "thirdparty/freetype/cmake-build/freetype"
+        "stacked",
+        "FreeType"
     }
 
     filter { "configurations:Debug" }
@@ -76,5 +76,6 @@ project "sandbox"
         runtime "Release"
         optimize "On"
 
+include "thirdparty/freetype"
 include "thirdparty/glad"
 include "thirdparty/glfw"
