@@ -4,12 +4,12 @@
 #include <glm/vec2.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 
-#include "rect.h"
-#include "shader.h"
+#include "ui.h"
 #include "font.h"
+#include "shader.h"
+#include "rect.h"
 
 #include <iostream>
-#include <unordered_map>
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
@@ -86,15 +86,12 @@ int main() {
     rect.SetColour(0.0f, 1.0f, 0.0f, 1.0f);
     rect.SetRadius(20.0f);
 
-    if (Button("Click Me"))
-    {
-        std::cout << "Ow! That hurt!\n";
-    }
-
     while (!glfwWindowShouldClose(window)) 
     {
-        rect.Render(shader);
-        font.Render("BALLS!", shader);
+        if (Ui::Button("Click Me", font, shader, { 100, 50 }, { 300, 200 }))
+        {
+            std::cout << "Ow! That hurt!\n";
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
