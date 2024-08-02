@@ -7,32 +7,40 @@
 
 #include <iostream>
 
-constexpr int DEFAULT_FONT_WIDTH = 48;
-
 struct Vertex
 {
     glm::vec2 position;
     glm::vec2 texture_coordinate;
 };
 
-Font::Font()
-    : m_colour{ 0.0f, 0.0f, 0.0f, 1.0f },
-      m_position{},
-      m_scale{ 1.0f }
+Font::Font(const std::string& path)
+    : m_path{ std::move(path) },
+      m_colour{ 0.0f, 0.0f, 0.0f, 1.0f },
+      m_position{}
 {
 }
 
-void Font::Load(const std::string& path)
+Font::~Font()
 {
+    glDeleteVertexArrays(1, &m_vao);
+    glDeleteBuffers(1, &m_vbo);
+    glDeleteBuffers(1, &m_ebo);
+}
+
+void Font::Load(const int size)
+{
+    if (m_characters.find(size) != m_characters.end())
+        return;
+
     FT_Library ft;
     if (FT_Init_FreeType(&ft))
         std::cerr << "Error: Failed to initialise FreeType.\n";
 
     FT_Face face;
-    if (FT_New_Face(ft, path.c_str(), 0, &face))
+    if (FT_New_Face(ft, m_path.c_str(), 0, &face))
         std::cerr << "Error: Failed to load font.\n";
 
-    FT_Set_Pixel_Sizes(face, 0, DEFAULT_FONT_WIDTH);
+    FT_Set_Pixel_Sizes(face, 0, size);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -72,7 +80,7 @@ void Font::Load(const std::string& path)
         character.bearing = glm::ivec2{ face->glyph->bitmap_left, face->glyph->bitmap_top };
         character.advance = face->glyph->advance.x;
 
-        m_characters[c] = character;
+        m_characters[size][c] = character;
     }
 
     FT_Done_Face(face);
@@ -86,8 +94,13 @@ void Font::Load(const std::string& path)
     glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
 
+    constexpr uint32_t indices[6] = {
+        0, 1, 2,
+        0, 2, 3
+    };
+
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 4 , nullptr, GL_DYNAMIC_DRAW);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * 6, nullptr, GL_DYNAMIC_DRAW); // TODO:  change this to STATIC draw as I don't expect the indices to change. Also we can load the indices in here.
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * 6, indices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
     glEnableVertexAttribArray(0);
@@ -100,8 +113,14 @@ void Font::Load(const std::string& path)
     glBindVertexArray(0);
 }
 
-void Font::Render(const std::string& text, const Shader& shader)
+void Font::Render(const std::string& text, const int size, const Shader& shader)
 {
+    if (m_characters.find(size) == m_characters.end())
+    {
+        std::cerr << "Error: Font has not been loaded with size " << size << "\n";
+        return;
+    }
+
     shader.Use();
 
     shader.SetVec4("u_colour", m_colour);
@@ -118,13 +137,13 @@ void Font::Render(const std::string& text, const Shader& shader)
     std::string::const_iterator c;
     for (c = text.begin(); c != text.end(); c++)
     {
-        Character ch = m_characters[*c];
+        Character ch = m_characters[size][*c];
 
-        float xpos = current_x + ch.bearing.x * m_scale;
-        float ypos = m_position.y - (ch.size.y - ch.bearing.y) * m_scale;
+        float xpos = current_x + ch.bearing.x;
+        float ypos = m_position.y - (ch.size.y - ch.bearing.y);
 
-        float w = ch.size.x * m_scale;
-        float h = ch.size.y * m_scale;
+        float w = ch.size.x;
+        float h = ch.size.y;
 
         Vertex vertices[4] = {
             { { xpos, ypos + h }, { 0.0f, 0.0f } },
@@ -133,25 +152,19 @@ void Font::Render(const std::string& text, const Shader& shader)
             { { xpos + w, ypos + h }, { 1.0f, 0.0f } }
         };
 
-        uint32_t indices[6] = {
-            0, 1, 2,
-            0, 2, 3
-        };
-
         glBindTexture(GL_TEXTURE_2D, ch.texture_id);
 
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
-        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(indices), indices);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        current_x += (ch.advance >> 6) * m_scale;
+        current_x += (ch.advance >> 6);
     }
 
     glDisable(GL_BLEND);
@@ -168,9 +181,4 @@ void Font::SetColour(float r, float g, float b, float a)
 void Font::SetPosition(const glm::ivec2& position)
 {
     m_position = position;
-}
-
-void Font::SetScale(float scale)
-{
-    m_scale = scale;
 }

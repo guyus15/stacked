@@ -8,6 +8,8 @@
 
 #include <unordered_map>
 
+constexpr int DEFAULT_FONT_SIZE = 48;
+
 struct Character
 {
     uint32_t texture_id;
@@ -19,19 +21,19 @@ struct Character
 class Font
 {
 public:
-    Font();
+    Font(const std::string& path);
+    ~Font();
 
-    void Load(const std::string& path);
-    void Render(const std::string& text, const Shader& shader);
+    void Load(int size = DEFAULT_FONT_SIZE);
+    void Render(const std::string& text, int size, const Shader& shader);
     void SetColour(float r, float g, float b, float a);
     void SetPosition(const glm::ivec2& position);
-    void SetScale(float scale);
 
 private:
+    std::string m_path;
     glm::vec4 m_colour;
     glm::ivec2 m_position;
-    float m_scale;
-    std::unordered_map<char, Character> m_characters;
+    std::unordered_map<int, std::unordered_map<char, Character>> m_characters;
     uint32_t m_vao, m_vbo, m_ebo;
 };
 
