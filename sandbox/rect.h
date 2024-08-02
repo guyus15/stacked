@@ -10,6 +10,7 @@ class Rect
 {
 public:
     Rect(int x, int y, int w, int h);
+    ~Rect();
 
     void Render(const Shader& shader);
 

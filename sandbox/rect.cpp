@@ -12,7 +12,7 @@ struct Vertex
 Rect::Rect(const int x, const int y, const int w, const int h)
     : m_position{ x, y },
       m_dimensions{ w, h },
-      m_colour{ 0.0f, 0.0f, 1.0f, 1.0f }
+      m_colour{ 1.0f, 1.0f, 1.0f, 1.0f }
 {
     glGenVertexArrays(1, &m_vao);
     glGenBuffers(1, &m_vbo);
@@ -22,14 +22,14 @@ Rect::Rect(const int x, const int y, const int w, const int h)
     glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
 
-    Vertex vertices[4] = {
+    const Vertex vertices[4] = {
         { { x, y + h }, { 0.0f, 0.0f } },
         { { x, y }, { 0.0f, 1.0f } },
         { { x + w, y }, { 1.0f, 1.0f } },
         { { x + w, y + h }, { 1.0f, 0.0f } }
     };
 
-    uint32_t indices[6] = {
+    constexpr uint32_t indices[6] = {
         0, 1, 2,
         0, 2, 3
     };
@@ -46,6 +46,13 @@ Rect::Rect(const int x, const int y, const int w, const int h)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+ }
+
+ Rect::~Rect()
+ {
+    glDeleteVertexArrays(1, &m_vao);
+    glDeleteBuffers(1, &m_vbo);
+    glDeleteBuffers(1, &m_ebo);
  }
 
 void Rect::Render(const Shader& shader)
