@@ -16,12 +16,11 @@ struct UiVec2I
     };
 };
 
-class Font;
 class Shader;
 
 namespace Ui
 {
-    bool Button(const std::string& name, Font& font, const Shader& shader, UiVec2I size, UiVec2I position);
+    bool Button(const std::string& name, const Shader& shader, UiVec2I size, UiVec2I position);
 }
 
 #endif // UI_H
