@@ -5,11 +5,15 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include <glm/vec2.hpp>
+
 #include <unordered_map>
+
+struct GLFWwindow;
 
 enum class KeyCode
 {
-    SPACEBAR = 32,
+    Spacebar = 32,
     A = 65,
     B = 66,
     C = 67,
@@ -36,41 +40,34 @@ enum class KeyCode
     X = 88,
     Y = 89,
     Z = 90,
-    TILDE = 96,
-    TAB = 258,
-    ARROW_RIGHT = 262,
-    ARROW_LEFT = 263,
-    ARROW_DOWN = 264,
-    ARROW_UP = 265,
-    ESCAPE = 256,
-    CAPSLOCK = 280,
-    LSHIFT = 340,
-    LCTRL = 341,
-    KEYCODE_SIZE
+    Tilde = 96,
+    Tab = 258,
+    ArrowRight = 262,
+    ArrowLeft = 263,
+    ArrowDown = 264,
+    ArrowUp = 265,
+    Escape = 256,
+    CapsLock = 280,
+    LeftShift = 340,
+    LeftCtrl = 341,
+    KeyCodeSize
 };
 
-    Get().m_input_map[key_code] = input_status;
-}
-
-/**
- * \brief Called each frame of the application.
- * \note This must be placed at the end of your main loop,
- * but before glfwPollEvents().
- */
-void Input::Update()
+enum class MouseButton
 {
-    Get().m_input_map_prev = Get().m_input_map;
-}
-    * \brief Initialises the input system by setting relevant keys to NOT_PRESSED.
+    LeftMouse = 0,
+    RightMouse = 1
+};
+
+enum class InputStatus;
+
+class Input
+{
+public:
+    /**
+    * \brief Initialises the input system by setting relevant keys to NotPressed.
     */
     static void Initialise();
-
-    /**
-     * \brief Called when the handling the GLFW key callback.
-     * \param glfw_keycode The GLFW key code for the key event.
-     * \param glfw_action The GLFW action for the key event.
-     */
-    static void CallbackUpdate(int glfw_keycode, int glfw_action);
 
     /**
      * \brief Called each frame of the application.
@@ -109,15 +106,79 @@ void Input::Update()
     */
     static bool GetKeyHeld(KeyCode key);
 
+    /**
+     * \brief Determines if the given mouse button is being pressed.
+     * \return True or false depending on whether the given mouse button is being pressed.
+     */
+    static bool GetMouse(MouseButton button);
+
+    /**
+     * \brief Determines if the given mouse button has been pressed down in the current frame.
+     * \return True or false depending on whether the given mouse button has been pressed down
+     * in the current frame.
+     */
+    static bool GetMouseDown(MouseButton key);
+
+    /**
+     * \brief Determines if the given mouse button has been released in the current frame.
+     * \return True or false depending on whether the given mouse button has been released
+     * in the current frame.
+     */
+    static bool GetMouseUp(MouseButton key);
+
+    /**
+     * \brief Determines if the given mouse button is being held down by looking at the state
+     * of the key in the previous and current frame.
+     * \return True or false depending on whether the given mouse button is being held down.
+     */
+    static bool GetMouseHeld(MouseButton key);
+
+    /**
+     * \brief Gets the current mouse position.
+     * \return The mouse's current position.
+     */
+    static glm::ivec2 GetMousePosition();
+
 private:
     Input() = default;
-    ~Input() = default;
-
+    
     static Input& Get();
     static Input s_instance;
 
-    std::unordered_map<KeyCode, InputStatus> m_input_map;
-    std::unordered_map<KeyCode, InputStatus> m_input_map_prev;
+    std::unordered_map<KeyCode, InputStatus> m_key_input;
+    std::unordered_map<KeyCode, InputStatus> m_key_input_prev;
+    std::unordered_map<MouseButton, InputStatus> m_mouse_input;
+    std::unordered_map<MouseButton, InputStatus> m_mouse_input_prev;
+    glm::ivec2 m_mouse_position;
+
+    /**
+     * \brief Called when the handling the GLFW key callback.
+     * \param glfw_keycode The GLFW key code for the key event.
+     * \param glfw_action The GLFW action for the key event.
+     */
+    static void KeyCallbackUpdate(int glfw_keycode, int glfw_action);
+
+    /**
+     * \brief Called when handling the GLFW mouse position callback.
+     * \param glfw_xpos The mouse's X position.
+     * \param glfw_ypos The mouse's Y position.
+     */
+    static void MouseButtonCallbackUpdate(int glfw_button, int glfw_action);
+
+    /**
+     * \brief Called when handling the GLFW mouse button callback.
+     * \param glfw_button The mouse button.
+     * \param glfw_action The action of the mouse button.
+     */
+    static void MousePositionCallbackUpdate(double glfw_xpos, double glfw_ypos);
+
+    friend void KeyCallback(GLFWwindow*, int, int, int, int);
+    friend void MouseButtonCallback(GLFWwindow*, int, int, int);
+    friend void MousePositionCallback(GLFWwindow*, double, double);
 };
+
+void KeyCallback(GLFWwindow*, int, int, int, int);
+void MouseButtonCallback(GLFWwindow*, int, int, int);
+void MousePositionCallback(GLFWwindow*, double, double);
 
 #endif // INPUT_H

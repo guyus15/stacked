@@ -8,6 +8,7 @@
 #include "font.h"
 #include "shader.h"
 #include "rect.h"
+#include "input.h"
 
 #include <iostream>
 #include <fstream>
@@ -32,6 +33,12 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
+
+    Input::Initialise();
+
+    glfwSetKeyCallback(window, KeyCallback);
+    glfwSetMouseButtonCallback(window, MouseButtonCallback);
+    glfwSetCursorPosCallback(window, MousePositionCallback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Error: Failed to initialise GLAD.\n";
@@ -76,22 +83,28 @@ int main() {
     glm::mat4 projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
     shader.SetMat4("projection", projection);
 
-    Font font;
-    font.Load("fonts/Montserrat/Montserrat-VariableFont_wght.ttf");
-    font.SetPosition({ 20, 60 });
-    font.SetScale(1.0f);
-    font.SetColour(1.0f, 1.0f, 1.0f, 1.0f);
-
     Rect rect{ 10, 10, 100, 100 };
     rect.SetColour(0.0f, 1.0f, 0.0f, 1.0f);
     rect.SetRadius(20.0f);
 
     while (!glfwWindowShouldClose(window)) 
     {
-        if (Ui::Button("Click Me", font, shader, { 100, 50 }, { 300, 200 }))
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        int width = abs(cos(glfwGetTime()) * 750);
+
+        if (Ui::Button("Balls", shader, { width, 200 }, { 25, 200 }))
         {
             std::cout << "Ow! That hurt!\n";
         }
+
+        // if (Ui::Button("Don't Click Me", shader, { 200, 100 }, { 10, 10 }))
+        // {
+        //     std::cout << "I told you not to!\n";
+        //     return -1;
+        // }
+
+        Input::Update();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
