@@ -1,6 +1,7 @@
 project "GLAD"
     kind "StaticLib"
     language "C"
+    pic "On"
 
     targetdir "../libs/%{cfg.buildcfg}"
     objdir "../obj/%{cfg.buildcfg}"
@@ -9,7 +10,6 @@ project "GLAD"
     files { "glad/src/glad.c" }
 
     filter { "system:Linux" }
-        pic "On"
         systemversion "latest"
         staticruntime "On"
 

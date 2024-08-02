@@ -2,7 +2,7 @@
  * input.cpp
  */
 
-#include "input.h"
+#include "stacked/input.h"
 
 #include <GLFW/glfw3.h>
 

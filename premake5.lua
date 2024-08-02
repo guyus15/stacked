@@ -4,10 +4,11 @@ workspace "stacked"
     startproject "stacked"
 
 project "stacked"
-    kind "StaticLib"
+    kind "SharedLib"
     language "C++"
     cppdialect "C++2a"
     staticruntime "On"
+    pic "On"
 
     targetdir "bin/%{cfg.buildcfg}"
     objdir "obj/%{cfg.buildcfg}"
@@ -16,7 +17,8 @@ project "stacked"
         "include",
         "thirdparty/glad/include",
         "thirdparty/glfw/include",
-        "thirdparty/freetype/include"
+        "thirdparty/freetype/include",
+        "thirdparty/glm"
     }
 
     files {
@@ -26,7 +28,8 @@ project "stacked"
 
     links {
         "GLAD",
-        "GLFW"
+        "GLFW",
+        "FreeType"
     }
 
     filter { "configurations:Debug" }
@@ -42,6 +45,7 @@ project "sandbox"
     language "C++"
     cppdialect "C++2a"
     staticruntime "On"
+    pic "On"
 
     targetdir "bin/%{cfg.buildcfg}"
     objdir "obj/%{cfg.buildcfg}"
@@ -62,10 +66,7 @@ project "sandbox"
     links {
         "GLAD",
         "GLFW",
-        "dl",
-        "pthread",
         "stacked",
-        "FreeType"
     }
 
     filter { "configurations:Debug" }

@@ -20,7 +20,8 @@ class Shader;
 
 namespace Ui
 {
-    bool Button(const std::string& name, const Shader& shader, UiVec2I size, UiVec2I position);
+    void Initialise();
+    bool Button(const std::string &name, UiVec2I size, UiVec2I position);
 }
 
 #endif // UI_H
