@@ -51,16 +51,22 @@ int main()
 
         int width = abs(cos(glfwGetTime()) * 750);
 
-        if (Ui::Button("Balls", {width, 200}, {25, 200}))
+        static bool enabled = false;
+        Ui::Checkbox("Checkbox", enabled, {400, 100});
+
+        if (Ui::Button("Hello", {width, 200}, {25, 200}))
         {
             std::cout << "Ow! That hurt!\n";
         }
 
-        // if (Ui::Button("Don't Click Me", { 200, 100 }, { 10, 10 }))
-        // {
-        //     std::cout << "I told you not to!\n";
-        //     return -1;
-        // }
+        if (enabled)
+        {
+            if (Ui::Button("Don't Click Me", {200, 100}, {10, 10}))
+            {
+                std::cout << "I told you not to!\n";
+                return -1;
+            }
+        }
 
         Input::Update();
 

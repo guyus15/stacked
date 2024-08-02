@@ -22,6 +22,7 @@ namespace Ui
 {
     void Initialise();
     bool Button(const std::string &name, UiVec2I size, UiVec2I position);
+    void Checkbox(const std::string &name, bool &enabled, UiVec2I position);
 }
 
 #endif // UI_H

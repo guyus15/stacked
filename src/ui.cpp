@@ -29,7 +29,6 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
     bool button_press = false;
 
     Shader &shader = ResourceManager::GetShader("default");
-    shader.Use();
 
     Rect button_rect{position.x, position.y, size.w, size.h};
     button_rect.SetRadius(5.0f);
@@ -75,4 +74,28 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
     font.Render(name, font_size, shader);
 
     return button_press;
+}
+void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
+{
+    Shader &shader = ResourceManager::GetShader("default");
+
+    Rect checkbox_rect{position.x, position.y, 50, 50};
+    if (enabled)
+        checkbox_rect.SetColour(0.0f, 1.0f, 0.0f, 1.0f);
+    else
+        checkbox_rect.SetColour(1.0f, 0.0f, 0.0f, 1.0f);
+
+    checkbox_rect.Render(shader);
+
+    glm::ivec2 mouse_pos = Input::GetMousePosition();
+    mouse_pos.y = 600 - mouse_pos.y;
+
+    if (mouse_pos.x < position.x + 50 && mouse_pos.x > position.x &&
+        mouse_pos.y < position.y + 50 && mouse_pos.y > position.y)
+    {
+        if (Input::GetMouseDown(MouseButton::LeftMouse))
+        {
+            enabled = !enabled;
+        }
+    }
 }
