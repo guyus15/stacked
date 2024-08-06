@@ -1,5 +1,6 @@
 #version 400 core
-in vec2 TexCoords;
+
+in vec2 v_texture_coords;
 
 out vec4 colour;
 
@@ -10,15 +11,14 @@ uniform float u_radius;
 
 void main()
 {
-    vec2 coords = TexCoords * u_dimensions;
+    vec2 coords = v_texture_coords * u_dimensions;
 
-    vec2 cornerDist = min(coords, u_dimensions - coords);
-    if (cornerDist.x < u_radius && cornerDist.y < u_radius) {
-        float dist = length(cornerDist - vec2(u_radius));
+    vec2 corner_dist = min(coords, u_dimensions - coords);
+    if (corner_dist.x < u_radius && corner_dist.y < u_radius) {
+        float dist = length(corner_dist - vec2(u_radius));
         if (dist > u_radius)
             discard;
     }
 
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(u_texture, TexCoords).r);
-    colour = u_colour * sampled;
+    colour = u_colour * vec4(1.0, 1.0, 1.0, texture(u_texture, v_texture_coords).r);
 }
