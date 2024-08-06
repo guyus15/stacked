@@ -12,12 +12,14 @@ public:
     Rect(int x, int y, int w, int h);
     ~Rect();
 
-    void Render(const Shader& shader);
+    void Render(const Shader &shader);
 
     void SetPosition(int x, int y);
     void SetDimensions(int w, int h);
     void SetColour(float r, float g, float b, float a);
     void SetRadius(float radius);
+
+    bool IsHovered() const;
 
 private:
     glm::ivec2 m_position;

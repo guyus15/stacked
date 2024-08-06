@@ -1,5 +1,4 @@
 #include "stacked/ui.h"
-
 #include "stacked/input.h"
 
 #include "font.h"
@@ -10,7 +9,9 @@
 
 #include <iostream>
 
-#define min(a, b) ((a) < (b)) ? (a) : (b);
+#define min(a, b) ((a) < (b)) ? (a) : (b)
+#define clamp(l, u, c) ((c) > (u)) ? (u) : ((c) < (l)) ? (l) \
+                                                       : (c)
 
 void Ui::Initialise()
 {
@@ -34,11 +35,7 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
     button_rect.SetRadius(5.0f);
     button_rect.SetColour(0.0f, 0.0f, 1.0f, 1.0f);
 
-    glm::ivec2 mouse_pos = Input::GetMousePosition();
-    mouse_pos.y = 600 - mouse_pos.y;
-
-    if (mouse_pos.x < position.x + size.w && mouse_pos.x > position.x &&
-        mouse_pos.y < position.y + size.h && mouse_pos.y > position.y)
+    if (button_rect.IsHovered())
     {
         // The button is being hovered over.
         button_rect.SetColour(0.3f, 0.3f, 1.0f, 1.0f);
@@ -93,12 +90,44 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
     glm::ivec2 mouse_pos = Input::GetMousePosition();
     mouse_pos.y = 600 - mouse_pos.y;
 
-    if (mouse_pos.x < position.x + 50 && mouse_pos.x > position.x &&
-        mouse_pos.y < position.y + 50 && mouse_pos.y > position.y)
+    if (checkbox_rect.IsHovered())
     {
         if (Input::GetMouseDown(MouseButton::LeftMouse))
         {
             enabled = !enabled;
         }
     }
+}
+
+void Ui::SliderFloat(const std::string &name, float &current_val, float min_val, float max_val, UiVec2I position)
+{
+    Shader &shader = ResourceManager::GetShader("default");
+
+    Rect background_rect{position.x, position.y, 200, 20};
+    background_rect.SetColour(0.6f, 0.6f, 0.6f, 1.0f);
+
+    background_rect.Render(shader);
+
+    current_val = clamp(min_val, max_val, current_val);
+
+    const float range = max_val - min_val;
+    const float percent = (range / 100) * current_val;
+
+    Rect slider_rect{position.x + static_cast<int>(percent * (200.0f - 20.0f) / 100.0f), position.y, 20, 20};
+    slider_rect.SetColour(1.0f, 1.0f, 0.0f, 1.0f);
+
+    if (slider_rect.IsHovered())
+    {
+        if (Input::GetMouse(MouseButton::LeftMouse))
+        {
+            glm::ivec2 mouse_pos = Input::GetMousePosition();
+            mouse_pos = 600 - mouse_pos;
+            int new_position_x = mouse_pos.x;
+            new_position_x = clamp(position.x, position.x + 200, new_position_x);
+
+            slider_rect.SetPosition(new_position_x, position.y);
+        }
+    }
+
+    slider_rect.Render(shader);
 }

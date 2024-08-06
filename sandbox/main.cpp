@@ -68,6 +68,9 @@ int main()
             }
         }
 
+        float current = 100.0f;
+        Ui::SliderFloat("Slider", current, 0.0f, 100.0f, {300, 500});
+
         Input::Update();
 
         glfwSwapBuffers(window);
