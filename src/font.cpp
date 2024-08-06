@@ -13,9 +13,9 @@ struct Vertex
     glm::vec2 texture_coordinate;
 };
 
-Font::Font(const std::string& path)
-    : m_path{ std::move(path) },
-      m_colour{ 0.0f, 0.0f, 0.0f, 1.0f },
+Font::Font(const std::string &path)
+    : m_path{std::move(path)},
+      m_colour{0.0f, 0.0f, 0.0f, 1.0f},
       m_position{}
 {
 }
@@ -66,8 +66,7 @@ void Font::Load(const int size)
             0,
             GL_RED,
             GL_UNSIGNED_BYTE,
-            face->glyph->bitmap.buffer
-        );
+            face->glyph->bitmap.buffer);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -76,8 +75,8 @@ void Font::Load(const int size)
 
         Character character{};
         character.texture_id = texture;
-        character.size = glm::ivec2{ face->glyph->bitmap.width, face->glyph->bitmap.rows };
-        character.bearing = glm::ivec2{ face->glyph->bitmap_left, face->glyph->bitmap_top };
+        character.size = glm::ivec2{face->glyph->bitmap.width, face->glyph->bitmap.rows};
+        character.bearing = glm::ivec2{face->glyph->bitmap_left, face->glyph->bitmap_top};
         character.advance = face->glyph->advance.x;
 
         m_characters[size][c] = character;
@@ -96,16 +95,15 @@ void Font::Load(const int size)
 
     constexpr uint32_t indices[6] = {
         0, 1, 2,
-        0, 2, 3
-    };
+        0, 2, 3};
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 4 , nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 4, nullptr, GL_DYNAMIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * 6, indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, position));
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texture_coordinate));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, texture_coordinate));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -113,7 +111,7 @@ void Font::Load(const int size)
     glBindVertexArray(0);
 }
 
-void Font::Render(const std::string& text, const int size, const Shader& shader)
+void Font::Render(const std::string &text, const int size, const Shader &shader)
 {
     if (m_characters.find(size) == m_characters.end())
     {
@@ -146,11 +144,10 @@ void Font::Render(const std::string& text, const int size, const Shader& shader)
         float h = ch.size.y;
 
         Vertex vertices[4] = {
-            { { xpos, ypos + h }, { 0.0f, 0.0f } },
-            { { xpos, ypos }, { 0.0f, 1.0f } },
-            { { xpos + w, ypos }, { 1.0f, 1.0f } },
-            { { xpos + w, ypos + h }, { 1.0f, 0.0f } }
-        };
+            {{xpos, ypos + h}, {0.0f, 0.0f}},
+            {{xpos, ypos}, {0.0f, 1.0f}},
+            {{xpos + w, ypos}, {1.0f, 1.0f}},
+            {{xpos + w, ypos + h}, {1.0f, 0.0f}}};
 
         glBindTexture(GL_TEXTURE_2D, ch.texture_id);
 
@@ -175,10 +172,10 @@ void Font::Render(const std::string& text, const int size, const Shader& shader)
 
 void Font::SetColour(float r, float g, float b, float a)
 {
-    m_colour = { r, g, b, a };
+    m_colour = {r, g, b, a};
 }
 
-void Font::SetPosition(const glm::ivec2& position)
+void Font::SetPosition(const glm::ivec2 &position)
 {
     m_position = position;
 }

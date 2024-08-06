@@ -80,6 +80,8 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
     Shader &shader = ResourceManager::GetShader("default");
 
     Rect checkbox_rect{position.x, position.y, 50, 50};
+    checkbox_rect.SetRadius(5.0f);
+
     if (enabled)
         checkbox_rect.SetColour(0.0f, 1.0f, 0.0f, 1.0f);
     else

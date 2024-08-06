@@ -2,7 +2,6 @@
  * \file shader.h
  */
 
-
 #ifndef SHADER_H
 #define SHADER_H
 
@@ -24,7 +23,7 @@ public:
      * \param vertex_shader_code The vertex shader code.
      * \param fragment_shader_code The fragment shader code.
      */
-    void Compile(const std::string& vertex_shader_code, const std::string& fragment_shader_code);
+    void Compile(const std::string &vertex_shader_code, const std::string &fragment_shader_code);
 
     /**
      * \brief Uses the shader program for rendering.
@@ -36,61 +35,76 @@ public:
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetBool(const std::string& name, bool value) const;
+    void SetBool(const std::string &name, bool value) const;
 
     /**
      * \brief Sets an integer uniform in the shader program.
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetInt(const std::string& name, int value) const;
+    void SetInt(const std::string &name, int value) const;
 
     /**
      * \brief Sets an float uniform in the shader program.
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetFloat(const std::string& name, float value) const;
+    void SetFloat(const std::string &name, float value) const;
+
+    /**
+     * \brief Sets a vec2 uniform in the shader program.
+     * \param name The name of the uniform.
+     * \param value1 The vec3 x value.
+     * \param value2 The vec3 y value.
+     */
+    void SetVec2(const std::string &name, float value1, float value2) const;
+
+    /**
+     * \brief Sets a vec2 uniform in the shader program.
+     * \param name The name of the uniform.
+     * \param value The value to set the uniform to.
+     */
+    void SetVec2(const std::string &name, const glm::vec2 &value) const;
 
     /**
      * \brief Sets a vec3 uniform in the shader program.
      * \param name The name of the uniform.
      * \param value1 The vec3 x value.
-     * \param value2 The vec3 y value. 
-     * \param value3 The vec3 z value. 
+     * \param value2 The vec3 y value.
+     * \param value3 The vec3 z value.
      */
-    void SetVec3(const std::string& name, float value1, float value2, float value3) const;
+    void SetVec3(const std::string &name, float value1, float value2, float value3) const;
+
+    /**
+     * \brief Sets a vec3 uniform in the shader program.
+     * \param name The name of the uniform.
+     * \param value The value to set the uniform to.
+     */
+    void SetVec3(const std::string &name, const glm::vec3 &value) const;
 
     /**
      * \brief Sets a vec4 uniform in the shader program.
      * \param name The name of the uniform.
      * \param value1 The vec4 x value.
-     * \param value2 The vec4 y value. 
-     * \param value3 The vec4 z value. 
-     * \param value4 The vec4 r value. 
+     * \param value2 The vec4 y value.
+     * \param value3 The vec4 z value.
+     * \param value4 The vec4 r value.
      */
-    void SetVec4(const std::string& name, float value1, float value2, float value3, float value4) const;
+    void SetVec4(const std::string &name, float value1, float value2, float value3, float value4) const;
 
     /**
-     * \brief Sets an vec3 uniform in the shader program.
+     * \brief Sets a vec4 uniform in the shader program.
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetVec3(const std::string& name, const glm::vec3& value) const;
+    void SetVec4(const std::string &name, const glm::vec4 &value) const;
 
     /**
-     * \brief Sets an vec4 uniform in the shader program.
+     * \brief Sets a mat4 uniform in the shader program.
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetVec4(const std::string& name, const glm::vec4& value) const;
-
-    /**
-     * \brief Sets an mat4 uniform in the shader program.
-     * \param name The name of the uniform.
-     * \param value The value to set the uniform to.
-     */
-    void SetMat4(const std::string& name, glm::mat4& value) const;
+    void SetMat4(const std::string &name, glm::mat4 &value) const;
 
     /**
      * \brief Gets the ID of the shader program.
