@@ -59,17 +59,18 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
 
     button_rect.Render(shader);
 
+    static Font font{"fonts/Montserrat/Montserrat-VariableFont_wght.ttf"};
+    font.SetColour(1.0f, 1.0f, 1.0f, 1.0f);
+
     int font_size = min(size.w / name.size() * 2, size.h);
     // Add padding, this will later be done via styling functions.
     int padding = 5;
     font_size = ((float)font_size / 100.0f) * (100.0f - padding);
-
     int font_length = font_size * name.size() / 2;
+    float font_divisors = size.h / static_cast<float>(font_size);
 
-    static Font font{"fonts/Montserrat/Montserrat-VariableFont_wght.ttf"};
-    font.SetColour(1.0f, 1.0f, 1.0f, 1.0f);
     font.SetPosition({position.x + size.w / 2 - font_length / 2,
-                      position.y + size.h / 2 - font_size / 2});
+                      position.y + static_cast<float>(font_size) * (font_divisors / 2) - (static_cast<float>(font_size) / 2) + (padding * 2)});
     font.Load(font_size);
     font.Render(name, font_size, shader);
 
