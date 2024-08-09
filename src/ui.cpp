@@ -111,23 +111,39 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
     current_val = clamp(min_val, max_val, current_val);
 
     const float range = max_val - min_val;
-    const float percent = (range / 100) * current_val;
 
-    Rect slider_rect{position.x + static_cast<int>(percent * (200.0f - 20.0f) / 100.0f), position.y, 20, 20};
-    slider_rect.SetColour(1.0f, 1.0f, 0.0f, 1.0f);
+    static bool gripped = false;
+    static std::string gripped_name = "";
 
-    if (slider_rect.IsHovered())
+    if (background_rect.IsHovered() && Input::GetMouseDown(MouseButton::LeftMouse))
     {
-        if (Input::GetMouse(MouseButton::LeftMouse))
-        {
-            glm::ivec2 mouse_pos = Input::GetMousePosition();
-            mouse_pos = 600 - mouse_pos;
-            int new_position_x = mouse_pos.x;
-            new_position_x = clamp(position.x, position.x + 200, new_position_x);
-
-            slider_rect.SetPosition(new_position_x, position.y);
-        }
+        gripped = true;
+        gripped_name = name;
     }
+
+    if (Input::GetMouseUp(MouseButton::LeftMouse))
+    {
+        gripped = false;
+        gripped_name = "";
+    }
+
+    if (gripped && gripped_name == name)
+    {
+        glm::ivec2 mouse_pos = Input::GetMousePosition();
+        mouse_pos.y = 600 - mouse_pos.y;
+
+        int new_pos_x = clamp(position.x, position.x + 200 - 20, mouse_pos.x - 10);
+
+        const float ui_range = 200 - 20;
+        const float percent = (new_pos_x - position.x) / ui_range;
+
+        current_val = (percent * range) + min_val;
+    }
+
+    const float new_percent = (current_val - min_val) / range;
+
+    Rect slider_rect{position.x + static_cast<int>(new_percent * (200.0f - 20.0f)), position.y, 20, 20};
+    slider_rect.SetColour(1.0f, 1.0f, 0.0f, 1.0f);
 
     slider_rect.Render(shader);
 }

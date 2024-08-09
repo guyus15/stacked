@@ -49,12 +49,18 @@ int main()
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        int width = abs(cos(glfwGetTime()) * 750);
+        int width = 500;
+
+        static float current = 100.0f;
+        Ui::SliderFloat("Slider", current, 0.0f, 150.0f, {300, 500});
+
+        static float current2 = 50.0f;
+        Ui::SliderFloat("Slider2", current2, 0.0f, 100.0f, {300, 400});
 
         static bool enabled = false;
         Ui::Checkbox("Checkbox", enabled, {400, 100});
 
-        if (Ui::Button("Hello", {width, 200}, {25, 200}))
+        if (Ui::Button(std::to_string(static_cast<int>(current)), {width, 200}, {25, 200}))
         {
             std::cout << "Ow! That hurt!\n";
         }
@@ -67,9 +73,6 @@ int main()
                 return -1;
             }
         }
-
-        float current = 100.0f;
-        Ui::SliderFloat("Slider", current, 0.0f, 100.0f, {300, 500});
 
         Input::Update();
 
