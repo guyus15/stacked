@@ -5,6 +5,8 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include "stacked/types.h"
+
 #include <glad/glad.h>
 #include <glm/mat4x4.hpp>
 
@@ -42,14 +44,14 @@ public:
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetInt(const std::string &name, int value) const;
+    void SetInt(const std::string &name, UiInt value) const;
 
     /**
      * \brief Sets an float uniform in the shader program.
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetFloat(const std::string &name, float value) const;
+    void SetFloat(const std::string &name, UiFloat value) const;
 
     /**
      * \brief Sets a vec2 uniform in the shader program.
@@ -57,14 +59,14 @@ public:
      * \param value1 The vec3 x value.
      * \param value2 The vec3 y value.
      */
-    void SetVec2(const std::string &name, float value1, float value2) const;
+    void SetVec2(const std::string &name, UiFloat value1, UiFloat value2) const;
 
     /**
      * \brief Sets a vec2 uniform in the shader program.
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetVec2(const std::string &name, const glm::vec2 &value) const;
+    void SetVec2(const std::string &name, const UiVec2F value) const;
 
     /**
      * \brief Sets a vec3 uniform in the shader program.
@@ -73,14 +75,14 @@ public:
      * \param value2 The vec3 y value.
      * \param value3 The vec3 z value.
      */
-    void SetVec3(const std::string &name, float value1, float value2, float value3) const;
+    void SetVec3(const std::string &name, UiFloat value1, UiFloat value2, UiFloat value3) const;
 
     /**
      * \brief Sets a vec3 uniform in the shader program.
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetVec3(const std::string &name, const glm::vec3 &value) const;
+    void SetVec3(const std::string &name, const UiVec3F value) const;
 
     /**
      * \brief Sets a vec4 uniform in the shader program.
@@ -90,14 +92,14 @@ public:
      * \param value3 The vec4 z value.
      * \param value4 The vec4 r value.
      */
-    void SetVec4(const std::string &name, float value1, float value2, float value3, float value4) const;
+    void SetVec4(const std::string &name, UiFloat value1, UiFloat value2, UiFloat value3, UiFloat value4) const;
 
     /**
      * \brief Sets a vec4 uniform in the shader program.
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetVec4(const std::string &name, const glm::vec4 &value) const;
+    void SetVec4(const std::string &name, const UiVec4F value) const;
 
     /**
      * \brief Sets a mat4 uniform in the shader program.

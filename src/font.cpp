@@ -1,4 +1,5 @@
 #include "font.h"
+#include "vertex.h"
 
 #include <glad/glad.h>
 
@@ -6,12 +7,6 @@
 #include FT_FREETYPE_H
 
 #include <iostream>
-
-struct Vertex
-{
-    glm::vec2 position;
-    glm::vec2 texture_coordinate;
-};
 
 Font::Font(const std::string &path)
     : m_path{std::move(path)},
@@ -170,12 +165,12 @@ void Font::Render(const std::string &text, const int size, const Shader &shader)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Font::SetColour(float r, float g, float b, float a)
+void Font::SetColour(const UiVec4F colour)
 {
-    m_colour = {r, g, b, a};
+    m_colour = colour;
 }
 
-void Font::SetPosition(const glm::ivec2 &position)
+void Font::SetPosition(const UiVec2I position)
 {
     m_position = position;
 }

@@ -80,6 +80,8 @@ int main()
         glfwPollEvents();
     }
 
+    Ui::Dispose();
+
     glfwDestroyWindow(window);
     glfwTerminate();
 

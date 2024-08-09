@@ -15,6 +15,7 @@ project "stacked"
 
     includedirs {
         "include",
+        "src",
         "thirdparty/glad/include",
         "thirdparty/glfw/include",
         "thirdparty/freetype/include",

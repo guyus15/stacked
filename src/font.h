@@ -1,10 +1,11 @@
 #ifndef FONT_H
 #define FONT_H
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
+#include "stacked/types.h"
 
 #include "shader.h"
+
+#include <glm/vec2.hpp>
 
 #include <unordered_map>
 
@@ -21,18 +22,18 @@ struct Character
 class Font
 {
 public:
-    Font(const std::string& path);
+    Font(const std::string &path);
     ~Font();
 
     void Load(int size = DEFAULT_FONT_SIZE);
-    void Render(const std::string& text, int size, const Shader& shader);
-    void SetColour(float r, float g, float b, float a);
-    void SetPosition(const glm::ivec2& position);
+    void Render(const std::string &text, int size, const Shader &shader);
+    void SetColour(UiVec4F colour);
+    void SetPosition(UiVec2I position);
 
 private:
     std::string m_path;
-    glm::vec4 m_colour;
-    glm::ivec2 m_position;
+    UiVec4F m_colour;
+    UiVec2I m_position;
     std::unordered_map<int, std::unordered_map<char, Character>> m_characters;
     uint32_t m_vao, m_vbo, m_ebo;
 };

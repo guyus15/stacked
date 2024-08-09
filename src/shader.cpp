@@ -84,42 +84,42 @@ void Shader::SetBool(const std::string &name, const bool value) const
     glUniform1i(glGetUniformLocation(m_id, name.c_str()), static_cast<int>(value));
 }
 
-void Shader::SetInt(const std::string &name, const int value) const
+void Shader::SetInt(const std::string &name, const UiInt value) const
 {
     glUniform1i(glGetUniformLocation(m_id, name.c_str()), value);
 }
 
-void Shader::SetFloat(const std::string &name, const float value) const
+void Shader::SetFloat(const std::string &name, const UiFloat value) const
 {
     glUniform1f(glGetUniformLocation(m_id, name.c_str()), value);
 }
 
-void Shader::SetVec2(const std::string &name, float value1, float value2) const
+void Shader::SetVec2(const std::string &name, UiFloat value1, UiFloat value2) const
 {
     glUniform2f(glGetUniformLocation(m_id, name.c_str()), value1, value2);
 }
 
-void Shader::SetVec2(const std::string &name, const glm::vec2 &value) const
+void Shader::SetVec2(const std::string &name, const UiVec2F value) const
 {
     glUniform2f(glGetUniformLocation(m_id, name.c_str()), value.x, value.y);
 }
 
-void Shader::SetVec3(const std::string &name, const float value1, const float value2, const float value3) const
+void Shader::SetVec3(const std::string &name, const UiFloat value1, const UiFloat value2, const UiFloat value3) const
 {
     glUniform3f(glGetUniformLocation(m_id, name.c_str()), value1, value2, value3);
 }
 
-void Shader::SetVec3(const std::string &name, const glm::vec3 &value) const
+void Shader::SetVec3(const std::string &name, const UiVec3F value) const
 {
     glUniform3f(glGetUniformLocation(m_id, name.c_str()), value.x, value.y, value.z);
 }
 
-void Shader::SetVec4(const std::string &name, const float value1, const float value2, const float value3, const float value4) const
+void Shader::SetVec4(const std::string &name, const UiFloat value1, const UiFloat value2, const UiFloat value3, const UiFloat value4) const
 {
     glUniform4f(glGetUniformLocation(m_id, name.c_str()), value1, value2, value3, value4);
 }
 
-void Shader::SetVec4(const std::string &name, const glm::vec4 &value) const
+void Shader::SetVec4(const std::string &name, const UiVec4F value) const
 {
     glUniform4f(glGetUniformLocation(m_id, name.c_str()), value.x, value.y, value.z, value.r);
 }

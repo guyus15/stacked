@@ -1,6 +1,8 @@
 #ifndef RECT_H
 #define RECT_H
 
+#include "stacked/types.h"
+
 #include "shader.h"
 
 #include <glm/vec2.hpp>
@@ -9,23 +11,23 @@
 class Rect
 {
 public:
-    Rect(int x, int y, int w, int h);
+    Rect(UiVec2I position, UiVec2I dimensions);
     ~Rect();
 
     void Render(const Shader &shader);
 
-    void SetPosition(int x, int y);
-    void SetDimensions(int w, int h);
-    void SetColour(float r, float g, float b, float a);
-    void SetRadius(float radius);
+    void SetPosition(UiVec2I position);
+    void SetDimensions(UiVec2I dimensions);
+    void SetColour(UiVec4F colour);
+    void SetRadius(UiFloat radius);
 
     bool IsHovered() const;
 
 private:
-    glm::ivec2 m_position;
-    glm::ivec2 m_dimensions;
-    glm::vec4 m_colour;
-    float m_radius;
+    UiVec2I m_position;
+    UiVec2I m_dimensions;
+    UiVec4F m_colour;
+    UiFloat m_radius;
     uint32_t m_vao, m_vbo, m_ebo;
 };
 
