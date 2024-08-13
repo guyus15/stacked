@@ -5,7 +5,7 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include <glm/vec2.hpp>
+#include "types.h"
 
 #include <unordered_map>
 
@@ -65,8 +65,8 @@ class Input
 {
 public:
     /**
-    * \brief Initialises the input system by setting relevant keys to NotPressed.
-    */
+     * \brief Initialises the input system by setting relevant keys to NotPressed.
+     */
     static void Initialise();
 
     /**
@@ -75,10 +75,10 @@ public:
     static void Update();
 
     /**
-    * \brief Determines if the given key is being pressed.
-    * \param key The given key.
-    * \return True or false value depending on whether the given key is being pressed.
-    */
+     * \brief Determines if the given key is being pressed.
+     * \param key The given key.
+     * \return True or false value depending on whether the given key is being pressed.
+     */
     static bool GetKey(KeyCode key);
 
     /**
@@ -98,12 +98,12 @@ public:
     static bool GetKeyUp(KeyCode key);
 
     /**
-    * \brief Determines if the given key is being held down by looking at the state
-    * of the key in the previous and current frame.
-    * \param key The given key.
-    * \return True or false value depending on whether the given key is being
-    * held down.
-    */
+     * \brief Determines if the given key is being held down by looking at the state
+     * of the key in the previous and current frame.
+     * \param key The given key.
+     * \return True or false value depending on whether the given key is being
+     * held down.
+     */
     static bool GetKeyHeld(KeyCode key);
 
     /**
@@ -137,19 +137,19 @@ public:
      * \brief Gets the current mouse position.
      * \return The mouse's current position.
      */
-    static glm::ivec2 GetMousePosition();
+    static UiVec2I GetMousePosition();
 
 private:
     Input() = default;
-    
-    static Input& Get();
+
+    static Input &Get();
     static Input s_instance;
 
     std::unordered_map<KeyCode, InputStatus> m_key_input;
     std::unordered_map<KeyCode, InputStatus> m_key_input_prev;
     std::unordered_map<MouseButton, InputStatus> m_mouse_input;
     std::unordered_map<MouseButton, InputStatus> m_mouse_input_prev;
-    glm::ivec2 m_mouse_position;
+    UiVec2I m_mouse_position;
 
     /**
      * \brief Called when the handling the GLFW key callback.
@@ -172,13 +172,13 @@ private:
      */
     static void MousePositionCallbackUpdate(double glfw_xpos, double glfw_ypos);
 
-    friend void KeyCallback(GLFWwindow*, int, int, int, int);
-    friend void MouseButtonCallback(GLFWwindow*, int, int, int);
-    friend void MousePositionCallback(GLFWwindow*, double, double);
+    friend void KeyCallback(GLFWwindow *, int, int, int, int);
+    friend void MouseButtonCallback(GLFWwindow *, int, int, int);
+    friend void MousePositionCallback(GLFWwindow *, double, double);
 };
 
-void KeyCallback(GLFWwindow*, int, int, int, int);
-void MouseButtonCallback(GLFWwindow*, int, int, int);
-void MousePositionCallback(GLFWwindow*, double, double);
+void KeyCallback(GLFWwindow *, int, int, int, int);
+void MouseButtonCallback(GLFWwindow *, int, int, int);
+void MousePositionCallback(GLFWwindow *, double, double);
 
 #endif // INPUT_H

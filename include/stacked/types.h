@@ -19,7 +19,13 @@ struct UiVec2I
     {
         UiInt y, h;
     };
+
+    UiVec2I operator+=(UiVec2I other);
+    UiVec2I operator-();
 };
+
+UiVec2I operator+(UiVec2I lhs, const UiVec2I &rhs);
+UiVec2I operator-(UiVec2I lhs, UiVec2I rhs);
 
 struct UiVec2F
 {

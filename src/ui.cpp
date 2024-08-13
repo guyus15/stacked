@@ -1,5 +1,6 @@
 #include "stacked/ui.h"
 #include "stacked/input.h"
+#include "stacked/types.h"
 
 #include "font.h"
 #include "rect.h"
@@ -8,13 +9,68 @@
 #include <glm/ext/matrix_clip_space.hpp>
 
 #include <iostream>
+#include <unordered_map>
+#include <stack>
 
 #define min(a, b) ((a) < (b)) ? (a) : (b)
 #define clamp(l, u, c) ((c) > (u)) ? (u) : ((c) < (l)) ? (l) \
                                                        : (c)
 
+// FIXME: Standardise naming of dimensions/size. It should be one or the other, not both.
+
+struct UiWindow
+{
+    std::string name;
+    UiVec2I position;
+    UiVec2I dimensions;
+    UiVec2I mouse_offset;
+};
+
+struct UiContext
+{
+    bool initialised;
+    UiStyle style;
+    UiFont font;
+    UiStack<UiWindow *> stack;
+    UiStorage windows;
+};
+
+UiContext *g_context = nullptr;
+
+static UiContext *GetContext()
+{
+    assert(g_context != nullptr);
+    return g_context;
+}
+
+static UiWindow *FindWindowById(const UiId id)
+{
+    UiContext *context = GetContext();
+    return static_cast<UiWindow *>(context->windows.GetVoidPtr(id));
+}
+
+static UiWindow *FindWindowByName(const std::string &name)
+{
+    const UiId id = std::hash<std::string>{}(name);
+    return FindWindowById(id);
+}
+
+static UiWindow *CreateNewWindow(const std::string &name)
+{
+    UiContext *context = GetContext();
+
+    UiId id = std::hash<std::string>{}(name);
+    UiWindow *window = new UiWindow{name};
+
+    context->windows.SetVoidPtr(id, window);
+
+    return window;
+}
+
 UiStyle::UiStyle()
 {
+    window_colour_background = {0.3f, 0.3f, 0.3f, 1.0f};
+
     button_colour_normal = {0.0f, 0.0f, 1.0f, 1.0f};
     button_colour_highlight = {0.3f, 0.3f, 1.0f, 1.0f};
     button_colour_press = {0.0f, 0.0f, 0.7f, 1.0f};
@@ -30,19 +86,12 @@ UiStyle::UiStyle()
     slider_colour_handle = {1.0f, 1.0f, 0.0f, 1.0f};
 }
 
-UiContext *g_context = nullptr;
-
-static UiContext *GetContext()
-{
-    assert(g_context != nullptr);
-    return g_context;
-}
-
 void Ui::Initialise()
 {
     g_context = new UiContext();
 
     g_context->initialised = true;
+    g_context->stack = {};
 
     ResourceManager::LoadShader("default", "shaders/shader.vs", "shaders/shader.fs");
     Shader &shader = ResourceManager::GetShader("default");
@@ -57,13 +106,61 @@ void Ui::Dispose()
     delete g_context;
 }
 
+// TODO: Pass window flags in to modify the behaviour of the window.
+void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
+{
+    UiWindow *window = FindWindowByName(name);
+
+    bool new_window_created = (window == nullptr);
+    if (new_window_created)
+    {
+        window = CreateNewWindow(name);
+        window->position = position;
+        window->dimensions = size;
+    }
+
+    UiContext *context = GetContext();
+
+    context->stack.push(window);
+
+    const UiStyle &style = context->style;
+
+    Rect window_rect{window->position, window->dimensions};
+    window_rect.SetColour(style.window_colour_background);
+
+    if (window_rect.IsHovered())
+    {
+        UiVec2I mouse_pos = Input::GetMousePosition();
+        mouse_pos.y = 600 - mouse_pos.y;
+
+        if (Input::GetMouseDown(MouseButton::LeftMouse))
+            window->mouse_offset = mouse_pos - window->position;
+        else if (Input::GetMouse(MouseButton::LeftMouse))
+            window->position = mouse_pos - window->mouse_offset;
+    }
+
+    Shader &shader = ResourceManager::GetShader("default");
+    window_rect.Render(shader);
+}
+
+void Ui::EndWindow()
+{
+    UiContext *context = GetContext();
+    context->stack.pop();
+}
+
 bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
 {
     bool button_press = false;
 
     Shader &shader = ResourceManager::GetShader("default");
 
-    const UiStyle &style = GetContext()->style;
+    UiContext *context = GetContext();
+
+    const UiWindow *current_window = context->stack.top();
+    position += current_window->position;
+
+    const UiStyle &style = context->style;
 
     Rect button_rect{position, size};
     button_rect.SetRadius(5.0f);
@@ -78,14 +175,10 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
         // so it is more obvious that the button has been pressed but the associated
         // function does not occur more than once.
         if (Input::GetMouse(MouseButton::LeftMouse))
-        {
             button_rect.SetColour(style.button_colour_press);
-        }
 
         if (Input::GetMouseDown(MouseButton::LeftMouse))
-        {
             button_press = true;
-        }
     }
 
     button_rect.Render(shader);
@@ -112,7 +205,12 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
 {
     Shader &shader = ResourceManager::GetShader("default");
 
-    const UiStyle &style = GetContext()->style;
+    UiContext *context = GetContext();
+
+    const UiWindow *current_window = context->stack.top();
+    position += current_window->position;
+
+    const UiStyle &style = context->style;
 
     Rect checkbox_rect{position, {50, 50}};
     checkbox_rect.SetRadius(5.0f);
@@ -124,15 +222,13 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
 
     checkbox_rect.Render(shader);
 
-    glm::ivec2 mouse_pos = Input::GetMousePosition();
+    UiVec2I mouse_pos = Input::GetMousePosition();
     mouse_pos.y = 600 - mouse_pos.y;
 
     if (checkbox_rect.IsHovered())
     {
         if (Input::GetMouseDown(MouseButton::LeftMouse))
-        {
             enabled = !enabled;
-        }
     }
 }
 
@@ -140,7 +236,12 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
 {
     Shader &shader = ResourceManager::GetShader("default");
 
-    const UiStyle &style = GetContext()->style;
+    UiContext *context = GetContext();
+
+    const UiWindow *current_window = context->stack.top();
+    position += current_window->position;
+
+    const UiStyle &style = context->style;
 
     Rect background_rect{position, {200, 20}};
     background_rect.SetColour(style.slider_colour_background);
@@ -168,7 +269,7 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
 
     if (gripped && gripped_name == name)
     {
-        glm::ivec2 mouse_pos = Input::GetMousePosition();
+        UiVec2I mouse_pos = Input::GetMousePosition();
         mouse_pos.y = 600 - mouse_pos.y;
 
         int new_pos_x = clamp(position.x, position.x + 200 - 20, mouse_pos.x - 10);

@@ -1,5 +1,31 @@
 #include "stacked/types.h"
 
+UiVec2I UiVec2I::operator+=(UiVec2I other)
+{
+    x += other.x;
+    y += other.y;
+    return *this;
+}
+
+UiVec2I UiVec2I::operator-()
+{
+    x = -x;
+    y = -y;
+    return *this;
+}
+
+UiVec2I operator+(UiVec2I lhs, const UiVec2I &rhs)
+{
+    lhs.x += rhs.x;
+    lhs.y += rhs.y;
+    return lhs;
+}
+
+UiVec2I operator-(UiVec2I lhs, UiVec2I rhs)
+{
+    return lhs + -rhs;
+}
+
 UiPair::UiPair(UiId _key, int _val)
     : key{_key},
       val_i{_val}

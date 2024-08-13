@@ -51,28 +51,17 @@ int main()
 
         int width = 500;
 
-        static float current = 100.0f;
-        Ui::SliderFloat("Slider", current, 0.0f, 150.0f, {300, 500});
+        Ui::BeginWindow("Window", {600, 400}, {100, 100});
 
-        static float current2 = 50.0f;
-        Ui::SliderFloat("Slider2", current2, 0.0f, 100.0f, {300, 400});
-
-        static bool enabled = false;
-        Ui::Checkbox("Checkbox", enabled, {400, 100});
-
-        if (Ui::Button(std::to_string(static_cast<int>(current)), {width, 200}, {25, 200}))
+        if (Ui::Button("Test", {100, 50}, {30, 30}))
         {
-            std::cout << "Ow! That hurt!\n";
+            std::cout << "Test button pressed.\n";
         }
 
-        if (enabled)
-        {
-            if (Ui::Button("Don't Click Me", {200, 100}, {10, 10}))
-            {
-                std::cout << "I told you not to!\n";
-                return -1;
-            }
-        }
+        static float current = 0.0f;
+        Ui::SliderFloat("Slider", current, 0.0f, 100.0f, {30, 100});
+
+        Ui::EndWindow();
 
         Input::Update();
 

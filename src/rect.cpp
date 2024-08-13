@@ -95,7 +95,7 @@ void Rect::SetRadius(const UiFloat radius)
 
 bool Rect::IsHovered() const
 {
-    glm::ivec2 mouse_pos = Input::GetMousePosition();
+    UiVec2I mouse_pos = Input::GetMousePosition();
     // FIXME: Change this so that we aren't using a hard-coded value, but are using some
     // screen dimension value.
     mouse_pos.y = 600 - mouse_pos.y;

@@ -7,6 +7,9 @@
 
 struct UiStyle
 {
+    // Window
+    UiVec4F window_colour_background;
+
     // Button
     UiVec4F button_colour_normal;
     UiVec4F button_colour_highlight;
@@ -32,25 +35,22 @@ struct UiFont
 {
 };
 
-struct UiContext
-{
-    bool initialised;
-    UiStyle style;
-    UiFont font;
-};
-
 namespace Ui
 {
     void Initialise();
     void Dispose();
 
-    // Styling
-    UiStyle &GetStyle();
+    // Window
+    void BeginWindow(const std::string &name, UiVec2I size, UiVec2I position);
+    void EndWindow();
 
     // Widgets
     bool Button(const std::string &name, UiVec2I size, UiVec2I position);
     void Checkbox(const std::string &name, bool &enabled, UiVec2I position);
     void SliderFloat(const std::string &name, float &current_val, float min_val, float max_val, UiVec2I position);
+
+    // Styling
+    UiStyle &GetStyle();
 }
 
 #endif // UI_H

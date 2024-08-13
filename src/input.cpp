@@ -75,7 +75,7 @@ bool Input::GetMouseHeld(const MouseButton button)
            Get().m_mouse_input_prev[button] == InputStatus::Pressed;
 }
 
-glm::ivec2 Input::GetMousePosition()
+UiVec2I Input::GetMousePosition()
 {
     return Get().m_mouse_position;
 }
@@ -88,8 +88,7 @@ Input &Input::Get()
 void Input::KeyCallbackUpdate(const int glfw_keycode, const int glfw_action)
 {
     const auto keycode = static_cast<KeyCode>(glfw_keycode);
-    const auto input_status = glfw_action == GLFW_REPEAT ?
-        InputStatus::Pressed :static_cast<InputStatus>(glfw_action);
+    const auto input_status = glfw_action == GLFW_REPEAT ? InputStatus::Pressed : static_cast<InputStatus>(glfw_action);
 
     Get().m_key_input[keycode] = input_status;
 }
@@ -97,15 +96,14 @@ void Input::KeyCallbackUpdate(const int glfw_keycode, const int glfw_action)
 void Input::MouseButtonCallbackUpdate(const int glfw_button, const int glfw_action)
 {
     const auto button = static_cast<MouseButton>(glfw_button);
-    const auto input_status = glfw_action == GLFW_REPEAT ?
-        InputStatus::Pressed :static_cast<InputStatus>(glfw_action);
+    const auto input_status = glfw_action == GLFW_REPEAT ? InputStatus::Pressed : static_cast<InputStatus>(glfw_action);
 
     Get().m_mouse_input[button] = input_status;
 }
 
 void Input::MousePositionCallbackUpdate(const double glfw_xpos, const double glfw_ypos)
 {
-    Get().m_mouse_position = { static_cast<int>(glfw_xpos), static_cast<int>(glfw_ypos) }; 
+    Get().m_mouse_position = {static_cast<int>(glfw_xpos), static_cast<int>(glfw_ypos)};
 }
 
 void KeyCallback(GLFWwindow *, const int keycode, int, const int action, int)
