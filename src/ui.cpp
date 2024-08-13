@@ -22,8 +22,15 @@ struct UiWindow
 {
     std::string name;
     UiVec2I position;
-    UiVec2I dimensions;
+    UiVec2I size;
     UiVec2I mouse_offset;
+};
+
+struct UiWidgetStackData
+{
+    UiId id;
+    UiVec2I size;
+    UiVec2I position;
 };
 
 struct UiContext
@@ -31,7 +38,8 @@ struct UiContext
     bool initialised;
     UiStyle style;
     UiFont font;
-    UiStack<UiWindow *> stack;
+    UiStack<UiWindow *> window_stack;
+    UiStack<UiWidgetStackData> widget_stack;
     UiStorage windows;
 };
 
@@ -67,6 +75,24 @@ static UiWindow *CreateNewWindow(const std::string &name)
     return window;
 }
 
+static void PushWidgetData(const std::string &name, UiVec2I size, UiVec2I position)
+{
+    UiContext *context = GetContext();
+
+    const UiId id = std::hash<std::string>{}(name);
+
+    UiWidgetStackData widget_data{};
+    widget_data.id = id;
+    widget_data.size = size;
+    widget_data.position = position;
+
+    context->widget_stack.push(widget_data);
+}
+
+static void PopWidgetData(const std::string &name)
+{
+}
+
 UiStyle::UiStyle()
 {
     window_colour_background = {0.3f, 0.3f, 0.3f, 1.0f};
@@ -91,7 +117,7 @@ void Ui::Initialise()
     g_context = new UiContext();
 
     g_context->initialised = true;
-    g_context->stack = {};
+    g_context->window_stack = {};
 
     ResourceManager::LoadShader("default", "shaders/shader.vs", "shaders/shader.fs");
     Shader &shader = ResourceManager::GetShader("default");
@@ -116,16 +142,17 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
     {
         window = CreateNewWindow(name);
         window->position = position;
-        window->dimensions = size;
+        window->size = size;
     }
 
     UiContext *context = GetContext();
 
-    context->stack.push(window);
+    context->window_stack.push(window);
+    // context->widget_stack.push({window->size, window->position});
 
     const UiStyle &style = context->style;
 
-    Rect window_rect{window->position, window->dimensions};
+    Rect window_rect{window->position, window->size};
     window_rect.SetColour(style.window_colour_background);
 
     if (window_rect.IsHovered())
@@ -146,7 +173,7 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
 void Ui::EndWindow()
 {
     UiContext *context = GetContext();
-    context->stack.pop();
+    context->window_stack.pop();
 }
 
 bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
@@ -157,8 +184,10 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
 
     UiContext *context = GetContext();
 
-    const UiWindow *current_window = context->stack.top();
+    const UiWindow *current_window = context->window_stack.top();
     position += current_window->position;
+
+    // context->widget_stack.push({size, position});
 
     const UiStyle &style = context->style;
 
@@ -207,8 +236,10 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
 
     UiContext *context = GetContext();
 
-    const UiWindow *current_window = context->stack.top();
+    const UiWindow *current_window = context->window_stack.top();
     position += current_window->position;
+
+    // context->widget_stack.push({size, position});
 
     const UiStyle &style = context->style;
 
@@ -238,8 +269,10 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
 
     UiContext *context = GetContext();
 
-    const UiWindow *current_window = context->stack.top();
+    const UiWindow *current_window = context->window_stack.top();
     position += current_window->position;
+
+    // context->widget_stack.push({size, position});
 
     const UiStyle &style = context->style;
 
