@@ -51,18 +51,34 @@ int main()
 
         Ui::BeginFrame();
 
-        Ui::BeginWindow("Window", {600, 400}, {100, 100});
+        Ui::BeginWindow("Window", {300, 200}, {0, 0});
 
-        if (Ui::Button("Test", {100, 50}, {30, 30}))
+        if (Ui::Button("Test", {100, 50}, {30, 10}))
         {
             std::cout << "Test button pressed.\n";
         }
 
         static float current = 0.0f;
-        Ui::SliderFloat("Slider", current, 0.0f, 100.0f, {30, 100});
+        Ui::SliderFloat("Slider", current, 0.0f, 100.0f, {30, 80});
 
         static bool enabled = false;
-        Ui::Checkbox("Checkbox", enabled, {30, 150});
+        Ui::Checkbox("Checkbox", enabled, {30, 130});
+
+        Ui::EndWindow();
+
+        // Second window
+        Ui::BeginWindow("Window2", {300, 200}, {300, 200});
+
+        if (Ui::Button("Test2", {100, 50}, {30, 10}))
+        {
+            std::cout << "Test button pressed.\n";
+        }
+
+        static float current2 = 0.0f;
+        Ui::SliderFloat("Slider2", current2, 0.0f, 100.0f, {30, 80});
+
+        static bool enabled2 = false;
+        Ui::Checkbox("Checkbox2", enabled2, {30, 130});
 
         Ui::EndWindow();
 

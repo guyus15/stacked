@@ -59,9 +59,7 @@ int UiStorage::GetInt(UiId key)
     std::vector<UiPair>::iterator it = std::lower_bound(data.begin(), data.end(), key);
 
     if (it == data.end() || it->key != key)
-    {
         return 0;
-    }
 
     return it->val_i;
 }
@@ -76,9 +74,7 @@ float UiStorage::GetFloat(UiId key)
     std::vector<UiPair>::iterator it = std::lower_bound(data.begin(), data.end(), key);
 
     if (it == data.end() || it->key != key)
-    {
         return 0.0f;
-    }
 
     return it->val_f;
 }
@@ -90,12 +86,11 @@ void UiStorage::SetVoidPtr(UiId key, void *val)
 
 void *UiStorage::GetVoidPtr(UiId key)
 {
-    std::vector<UiPair>::iterator it = std::lower_bound(data.begin(), data.end(), key);
-
-    if (it == data.end() || it->key != key)
+    for (const auto &item : data)
     {
-        return nullptr;
+        if (item.key == key)
+            return item.val_p;
     }
 
-    return it->val_p;
+    return nullptr;
 }

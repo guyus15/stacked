@@ -39,7 +39,6 @@ struct UiContext
     UiStyle style;
     UiFont font;
     UiStack<UiWindow *> window_stack;
-    UiStack<UiWidgetStackData> widget_stack;
     UiStorage windows;
     UiId hot_id;
     UiId active_id;
@@ -76,24 +75,6 @@ static UiWindow *CreateNewWindow(const std::string &name)
     context->windows.SetVoidPtr(id, window);
 
     return window;
-}
-
-static void PushWidgetData(const std::string &name, UiVec2I size, UiVec2I position)
-{
-    UiContext *context = GetContext();
-
-    const UiId id = std::hash<std::string>{}(name);
-
-    UiWidgetStackData widget_data{};
-    widget_data.id = id;
-    widget_data.size = size;
-    widget_data.position = position;
-
-    context->widget_stack.Push(widget_data);
-}
-
-static void PopWidgetData(const std::string &name)
-{
 }
 
 UiStyle::UiStyle()
@@ -138,8 +119,15 @@ void Ui::Dispose()
 void Ui::BeginFrame()
 {
     UiContext *context = GetContext();
+    context->hot_id = 0;
+}
+
+void Ui::EndFrame()
+{
+    UiContext *context = GetContext();
 
     UiWindow *window = context->current_window;
+
     if (window && context->hot_id == window->id && context->active_id == 0)
     {
         UiVec2I mouse_pos = Input::GetMousePosition();
@@ -150,11 +138,6 @@ void Ui::BeginFrame()
         else if (Input::GetMouse(MouseButton::LeftMouse))
             window->position = mouse_pos - window->mouse_offset;
     }
-}
-
-void Ui::EndFrame()
-{
-    UiContext *context = GetContext();
 
     if (Input::GetMouseUp(MouseButton::LeftMouse))
         context->active_id = 0;
@@ -176,7 +159,6 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
     UiContext *context = GetContext();
 
     context->window_stack.Push(window);
-    // context->widget_stack.push({window->size, window->position});
 
     const UiStyle &style = context->style;
 
@@ -210,8 +192,6 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
     const UiWindow *current_window = context->window_stack.Top();
     position += current_window->position;
 
-    // context->widget_stack.push({size, position});
-
     const UiStyle &style = context->style;
 
     Rect button_rect{position, size};
@@ -244,8 +224,7 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
     font.SetColour(style.button_font_colour);
 
     int font_size = min(size.w / name.size() * 2, size.h);
-    // Add padding, this will later be done via styling functions.
-    int padding = 5;
+    int padding = style.button_font_padding;
     font_size = ((float)font_size / 100.0f) * (100.0f - padding);
     int font_length = font_size * name.size() / 2;
     float font_divisors = size.h / static_cast<float>(font_size);
@@ -266,8 +245,6 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
 
     const UiWindow *current_window = context->window_stack.Top();
     position += current_window->position;
-
-    // context->widget_stack.push({size, position});
 
     const UiStyle &style = context->style;
 
@@ -304,8 +281,6 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
 
     const UiWindow *current_window = context->window_stack.Top();
     position += current_window->position;
-
-    // context->widget_stack.push({size, position});
 
     const UiStyle &style = context->style;
 
