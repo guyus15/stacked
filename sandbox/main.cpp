@@ -49,7 +49,7 @@ int main()
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        int width = 500;
+        Ui::BeginFrame();
 
         Ui::BeginWindow("Window", {600, 400}, {100, 100});
 
@@ -61,7 +61,12 @@ int main()
         static float current = 0.0f;
         Ui::SliderFloat("Slider", current, 0.0f, 100.0f, {30, 100});
 
+        static bool enabled = false;
+        Ui::Checkbox("Checkbox", enabled, {30, 150});
+
         Ui::EndWindow();
+
+        Ui::EndFrame();
 
         Input::Update();
 

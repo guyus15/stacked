@@ -20,7 +20,7 @@
 
 struct UiWindow
 {
-    std::string name;
+    UiId id;
     UiVec2I position;
     UiVec2I size;
     UiVec2I mouse_offset;
@@ -41,6 +41,9 @@ struct UiContext
     UiStack<UiWindow *> window_stack;
     UiStack<UiWidgetStackData> widget_stack;
     UiStorage windows;
+    UiId hot_id;
+    UiId active_id;
+    UiWindow *current_window;
 };
 
 UiContext *g_context = nullptr;
@@ -68,7 +71,7 @@ static UiWindow *CreateNewWindow(const std::string &name)
     UiContext *context = GetContext();
 
     UiId id = std::hash<std::string>{}(name);
-    UiWindow *window = new UiWindow{name};
+    UiWindow *window = new UiWindow{id};
 
     context->windows.SetVoidPtr(id, window);
 
@@ -132,6 +135,31 @@ void Ui::Dispose()
     delete g_context;
 }
 
+void Ui::BeginFrame()
+{
+    UiContext *context = GetContext();
+
+    UiWindow *window = context->current_window;
+    if (window && context->hot_id == window->id && context->active_id == 0)
+    {
+        UiVec2I mouse_pos = Input::GetMousePosition();
+        mouse_pos.y = 600 - mouse_pos.y;
+
+        if (Input::GetMouseDown(MouseButton::LeftMouse))
+            window->mouse_offset = mouse_pos - window->position;
+        else if (Input::GetMouse(MouseButton::LeftMouse))
+            window->position = mouse_pos - window->mouse_offset;
+    }
+}
+
+void Ui::EndFrame()
+{
+    UiContext *context = GetContext();
+
+    if (Input::GetMouseUp(MouseButton::LeftMouse))
+        context->active_id = 0;
+}
+
 // TODO: Pass window flags in to modify the behaviour of the window.
 void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
 {
@@ -157,13 +185,8 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
 
     if (window_rect.IsHovered())
     {
-        UiVec2I mouse_pos = Input::GetMousePosition();
-        mouse_pos.y = 600 - mouse_pos.y;
-
-        if (Input::GetMouseDown(MouseButton::LeftMouse))
-            window->mouse_offset = mouse_pos - window->position;
-        else if (Input::GetMouse(MouseButton::LeftMouse))
-            window->position = mouse_pos - window->mouse_offset;
+        context->hot_id = std::hash<std::string>{}(name);
+        context->current_window = window;
     }
 
     Shader &shader = ResourceManager::GetShader("default");
@@ -197,6 +220,8 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
 
     if (button_rect.IsHovered())
     {
+        context->hot_id = std::hash<std::string>{}(name);
+
         // The button is being hovered over.
         button_rect.SetColour(style.button_colour_highlight);
 
@@ -204,7 +229,10 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
         // so it is more obvious that the button has been pressed but the associated
         // function does not occur more than once.
         if (Input::GetMouse(MouseButton::LeftMouse))
+        {
+            context->active_id = std::hash<std::string>{}(name);
             button_rect.SetColour(style.button_colour_press);
+        }
 
         if (Input::GetMouseDown(MouseButton::LeftMouse))
             button_press = true;
@@ -258,8 +286,13 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
 
     if (checkbox_rect.IsHovered())
     {
+        context->hot_id = std::hash<std::string>{}(name);
+
         if (Input::GetMouseDown(MouseButton::LeftMouse))
+        {
+            context->active_id = std::hash<std::string>{}(name);
             enabled = !enabled;
+        }
     }
 }
 
@@ -288,14 +321,21 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
     static bool gripped = false;
     static std::string gripped_name = "";
 
-    if (background_rect.IsHovered() && Input::GetMouseDown(MouseButton::LeftMouse))
+    if (background_rect.IsHovered())
     {
-        gripped = true;
-        gripped_name = name;
+        context->hot_id = std::hash<std::string>{}(name);
+
+        if (Input::GetMouseDown(MouseButton::LeftMouse))
+        {
+            context->active_id = std::hash<std::string>{}(name);
+            gripped = true;
+            gripped_name = name;
+        }
     }
 
     if (Input::GetMouseUp(MouseButton::LeftMouse))
     {
+        context->active_id = 0;
         gripped = false;
         gripped_name = "";
     }

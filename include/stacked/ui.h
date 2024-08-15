@@ -40,6 +40,9 @@ namespace Ui
     void Initialise();
     void Dispose();
 
+    void BeginFrame();
+    void EndFrame();
+
     // Window
     void BeginWindow(const std::string &name, UiVec2I size, UiVec2I position);
     void EndWindow();
