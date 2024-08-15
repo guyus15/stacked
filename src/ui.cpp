@@ -86,7 +86,7 @@ static void PushWidgetData(const std::string &name, UiVec2I size, UiVec2I positi
     widget_data.size = size;
     widget_data.position = position;
 
-    context->widget_stack.push(widget_data);
+    context->widget_stack.Push(widget_data);
 }
 
 static void PopWidgetData(const std::string &name)
@@ -147,7 +147,7 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
 
     UiContext *context = GetContext();
 
-    context->window_stack.push(window);
+    context->window_stack.Push(window);
     // context->widget_stack.push({window->size, window->position});
 
     const UiStyle &style = context->style;
@@ -173,7 +173,7 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
 void Ui::EndWindow()
 {
     UiContext *context = GetContext();
-    context->window_stack.pop();
+    context->window_stack.Pop();
 }
 
 bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
@@ -184,7 +184,7 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
 
     UiContext *context = GetContext();
 
-    const UiWindow *current_window = context->window_stack.top();
+    const UiWindow *current_window = context->window_stack.Top();
     position += current_window->position;
 
     // context->widget_stack.push({size, position});
@@ -236,7 +236,7 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
 
     UiContext *context = GetContext();
 
-    const UiWindow *current_window = context->window_stack.top();
+    const UiWindow *current_window = context->window_stack.Top();
     position += current_window->position;
 
     // context->widget_stack.push({size, position});
@@ -269,7 +269,7 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
 
     UiContext *context = GetContext();
 
-    const UiWindow *current_window = context->window_stack.top();
+    const UiWindow *current_window = context->window_stack.Top();
     position += current_window->position;
 
     // context->widget_stack.push({size, position});

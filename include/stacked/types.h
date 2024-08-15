@@ -113,15 +113,44 @@ struct UiVec4F
 using UiId = size_t;
 
 template <typename T>
-using UiStack = std::stack<T>;
+class UiStack
+{
+public:
+    UiStack() = default;
+
+    void Push(T value)
+    {
+        m_data.push_back(value);
+    }
+
+    T Pop()
+    {
+        T value = *(m_data.end() - 1);
+        m_data.erase(m_data.end());
+        return value;
+    }
+
+    T Top()
+    {
+        return *(m_data.end() - 1);
+    }
+
+    void Clear()
+    {
+        m_data.clear();
+    }
+
+private:
+    std::vector<T> m_data;
+};
 
 struct UiPair
 {
     UiId key;
     union
     {
-        int val_i;
-        float val_f;
+        UiInt val_i;
+        UiFloat val_f;
         void *val_p;
     };
 
