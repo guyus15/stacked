@@ -26,13 +26,6 @@ struct UiWindow
     UiVec2I mouse_offset;
 };
 
-struct UiWidgetStackData
-{
-    UiId id;
-    UiVec2I size;
-    UiVec2I position;
-};
-
 struct UiContext
 {
     bool initialised;
@@ -75,6 +68,31 @@ static UiWindow *CreateNewWindow(const std::string &name)
     context->windows.SetVoidPtr(id, window);
 
     return window;
+}
+
+static void GetWidgetInteraction(const Rect &rect, const std::string &name, bool *hovered, bool *pressed, bool *held)
+{
+    UiContext *context = GetContext();
+
+    if (rect.IsHovered())
+    {
+        UiId id = std::hash<std::string>{}(name);
+        context->hot_id = id;
+
+        if (hovered)
+            *hovered = true;
+
+        if (Input::GetMouse(MouseButton::LeftMouse))
+            if (held)
+                *held = true;
+
+        if (Input::GetMouseDown(MouseButton::LeftMouse))
+        {
+            context->active_id = id;
+            if (pressed)
+                *pressed = true;
+        }
+    }
 }
 
 UiStyle::UiStyle()
@@ -195,28 +213,20 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
     const UiStyle &style = context->style;
 
     Rect button_rect{position, size};
-    button_rect.SetRadius(5.0f);
+    button_rect.SetRadius(style.button_radius);
     button_rect.SetColour(style.button_colour_normal);
 
-    if (button_rect.IsHovered())
-    {
-        context->hot_id = std::hash<std::string>{}(name);
+    bool hovered = false, pressed = false, held = false;
+    GetWidgetInteraction(button_rect, name, &hovered, &pressed, &held);
 
-        // The button is being hovered over.
+    if (hovered)
         button_rect.SetColour(style.button_colour_highlight);
 
-        // We set the colour setting operation and the button press separately
-        // so it is more obvious that the button has been pressed but the associated
-        // function does not occur more than once.
-        if (Input::GetMouse(MouseButton::LeftMouse))
-        {
-            context->active_id = std::hash<std::string>{}(name);
-            button_rect.SetColour(style.button_colour_press);
-        }
+    if (pressed)
+        button_press = true;
 
-        if (Input::GetMouseDown(MouseButton::LeftMouse))
-            button_press = true;
-    }
+    if (held)
+        button_rect.SetColour(style.button_colour_press);
 
     button_rect.Render(shader);
 
@@ -249,7 +259,13 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
     const UiStyle &style = context->style;
 
     Rect checkbox_rect{position, {50, 50}};
-    checkbox_rect.SetRadius(5.0f);
+    checkbox_rect.SetRadius(style.checkbox_radius);
+
+    bool pressed = false;
+    GetWidgetInteraction(checkbox_rect, name, nullptr, &pressed, nullptr);
+
+    if (pressed)
+        enabled = !enabled;
 
     if (enabled)
         checkbox_rect.SetColour(style.checkbox_colour_enabled);
@@ -257,20 +273,6 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
         checkbox_rect.SetColour(style.checkbox_colour_normal);
 
     checkbox_rect.Render(shader);
-
-    UiVec2I mouse_pos = Input::GetMousePosition();
-    mouse_pos.y = 600 - mouse_pos.y;
-
-    if (checkbox_rect.IsHovered())
-    {
-        context->hot_id = std::hash<std::string>{}(name);
-
-        if (Input::GetMouseDown(MouseButton::LeftMouse))
-        {
-            context->active_id = std::hash<std::string>{}(name);
-            enabled = !enabled;
-        }
-    }
 }
 
 void Ui::SliderFloat(const std::string &name, float &current_val, float min_val, float max_val, UiVec2I position)
@@ -293,29 +295,9 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
 
     const float range = max_val - min_val;
 
-    static bool gripped = false;
-    static std::string gripped_name = "";
+    GetWidgetInteraction(background_rect, name, nullptr, nullptr, nullptr);
 
-    if (background_rect.IsHovered())
-    {
-        context->hot_id = std::hash<std::string>{}(name);
-
-        if (Input::GetMouseDown(MouseButton::LeftMouse))
-        {
-            context->active_id = std::hash<std::string>{}(name);
-            gripped = true;
-            gripped_name = name;
-        }
-    }
-
-    if (Input::GetMouseUp(MouseButton::LeftMouse))
-    {
-        context->active_id = 0;
-        gripped = false;
-        gripped_name = "";
-    }
-
-    if (gripped && gripped_name == name)
+    if (context->active_id == std::hash<std::string>{}(name))
     {
         UiVec2I mouse_pos = Input::GetMousePosition();
         mouse_pos.y = 600 - mouse_pos.y;
