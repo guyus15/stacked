@@ -8,21 +8,21 @@
 
 #include <iostream>
 
-Font::Font(const std::string &path)
+UiFont::UiFont(const std::string &path)
     : m_path{std::move(path)},
       m_colour{0.0f, 0.0f, 0.0f, 1.0f},
       m_position{}
 {
 }
 
-Font::~Font()
+UiFont::~UiFont()
 {
     glDeleteVertexArrays(1, &m_vao);
     glDeleteBuffers(1, &m_vbo);
     glDeleteBuffers(1, &m_ebo);
 }
 
-void Font::Load(const int size)
+void UiFont::Load(const int size)
 {
     if (m_characters.find(size) != m_characters.end())
         return;
@@ -106,7 +106,7 @@ void Font::Load(const int size)
     glBindVertexArray(0);
 }
 
-void Font::Render(const std::string &text, const int size, const Shader &shader)
+void UiFont::Render(const std::string &text, const int size, const Shader &shader)
 {
     if (m_characters.find(size) == m_characters.end())
     {
@@ -165,12 +165,12 @@ void Font::Render(const std::string &text, const int size, const Shader &shader)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Font::SetColour(const UiVec4F colour)
+void UiFont::SetColour(const UiVec4F colour)
 {
     m_colour = colour;
 }
 
-void Font::SetPosition(const UiVec2I position)
+void UiFont::SetPosition(const UiVec2I position)
 {
     m_position = position;
 }

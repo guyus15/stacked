@@ -19,11 +19,12 @@ struct Character
     uint32_t advance;
 };
 
-class Font
+class UiFont
 {
 public:
-    Font(const std::string &path);
-    ~Font();
+    UiFont() = default;
+    UiFont(const std::string &path);
+    ~UiFont();
 
     void Load(int size = DEFAULT_FONT_SIZE);
     void Render(const std::string &text, int size, const Shader &shader);

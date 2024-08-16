@@ -119,6 +119,7 @@ void Ui::Initialise()
     g_context = new UiContext();
 
     g_context->initialised = true;
+    g_context->font = UiFont{"fonts/Montserrat/Montserrat-VariableFont_wght.ttf"};
     g_context->window_stack = {};
 
     ResourceManager::LoadShader("default", "shaders/shader.vs", "shaders/shader.fs");
@@ -211,6 +212,7 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
     position += current_window->position;
 
     const UiStyle &style = context->style;
+    UiFont &font = context->font;
 
     Rect button_rect{position, size};
     button_rect.SetRadius(style.button_radius);
@@ -230,15 +232,13 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
 
     button_rect.Render(shader);
 
-    static Font font{"fonts/Montserrat/Montserrat-VariableFont_wght.ttf"};
-    font.SetColour(style.button_font_colour);
-
     int font_size = min(size.w / name.size() * 2, size.h);
     int padding = style.button_font_padding;
     font_size = ((float)font_size / 100.0f) * (100.0f - padding);
     int font_length = font_size * name.size() / 2;
     float font_divisors = size.h / static_cast<float>(font_size);
 
+    font.SetColour(style.button_font_colour);
     font.SetPosition({position.x + size.w / 2 - font_length / 2,
                       position.y + static_cast<UiInt>(static_cast<float>(font_size) * (font_divisors / 2) - (static_cast<float>(font_size) / 2) + (padding * 2))});
     font.Load(font_size);

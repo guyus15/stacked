@@ -30,11 +30,6 @@ struct UiStyle
     UiStyle();
 };
 
-// TODO: Rename Font class in font.h to UiFont and reference here.
-struct UiFont
-{
-};
-
 namespace Ui
 {
     void Initialise();
