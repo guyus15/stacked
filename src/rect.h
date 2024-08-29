@@ -22,6 +22,7 @@ public:
     void SetRadius(UiFloat radius);
 
     bool IsHovered() const;
+    bool IsHovered(UiVec2I offset, UiVec2I padding) const;
 
 private:
     UiVec2I m_position;

@@ -69,16 +69,8 @@ int main()
         // Second window
         Ui::BeginWindow("Window2", {300, 200}, {300, 200});
 
-        if (Ui::Button("Test2", {100, 50}, {30, 10}))
-        {
-            std::cout << "Test button pressed.\n";
-        }
-
-        static float current2 = 0.0f;
-        Ui::SliderFloat("Slider2", current2, 0.0f, 100.0f, {30, 80});
-
-        static bool enabled2 = false;
-        Ui::Checkbox("Checkbox2", enabled2, {30, 130});
+        static std::string text;
+        Ui::TextBox("Text Box 1", text, {200, 150}, {50, 25});
 
         Ui::EndWindow();
 

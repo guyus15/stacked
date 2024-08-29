@@ -44,8 +44,10 @@ namespace Ui
 
     // Widgets
     bool Button(const std::string &name, UiVec2I size, UiVec2I position);
+    // TODO: Cleanup widget functions in the same way as Button()
     void Checkbox(const std::string &name, bool &enabled, UiVec2I position);
     void SliderFloat(const std::string &name, float &current_val, float min_val, float max_val, UiVec2I position);
+    void TextBox(const std::string &name, std::string &text, UiVec2I size, UiVec2I position);
 
     // Styling
     UiStyle &GetStyle();
