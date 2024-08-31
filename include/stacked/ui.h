@@ -10,6 +10,10 @@ struct UiStyle
     // Window
     UiVec4F window_colour_background;
 
+    UiVec4F window_border_colour;
+    UiInt window_border_width;
+    UiFloat window_border_radius;
+
     // Button
     UiVec4F button_colour_normal;
     UiVec4F button_colour_highlight;

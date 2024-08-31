@@ -124,19 +124,27 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
 {
     UiContext *context = GetContext();
 
-    Rect border_left{{window->position.x, window->position.y + 5}, {5, window->size.h - 10}};
-    Rect border_right{{window->position.x + window->size.w - 5, window->position.y + 5}, {5, window->size.h - 10}};
-    Rect border_top{{window->position.x + 5, window->position.y + window->size.h - 5}, {window->size.w - 10, 5}};
-    Rect border_bottom{{window->position.x + 5, window->position.y}, {window->size.w - 10, 5}};
+    UiStyle style = context->style;
 
-    Rect border_top_left{{window->position.x, window->position.y + window->size.h - 5}, {5, 5}};
-    border_top_left.SetColour({0.0f, 1.0f, 0.0f, 1.0f});
-    Rect border_top_right{{window->position.x + window->size.w - 5, window->position.y + window->size.h - 5}, {5, 5}};
-    border_top_right.SetColour({0.0f, 1.0f, 0.0f, 1.0f});
-    Rect border_bottom_left{window->position, {5, 5}};
-    border_bottom_left.SetColour({0.0f, 1.0f, 0.0f, 1.0f});
-    Rect border_bottom_right{{window->position.x + window->size.w - 5, window->position.y}, {5, 5}};
-    border_bottom_right.SetColour({0.0f, 1.0f, 0.0f, 1.0f});
+    int border_width = style.window_border_width;
+
+    Rect border_left{{window->position.x, window->position.y + border_width}, {border_width, window->size.h - border_width * 2}};
+    Rect border_right{{window->position.x + window->size.w - border_width, window->position.y + border_width}, {border_width, window->size.h - border_width * 2}};
+    Rect border_top{{window->position.x + border_width, window->position.y + window->size.h - border_width}, {window->size.w - border_width * 2, border_width}};
+    Rect border_bottom{{window->position.x + border_width, window->position.y}, {window->size.w - border_width * 2, border_width}};
+    Rect border_top_left{{window->position.x, window->position.y + window->size.h - border_width}, {border_width, border_width}};
+    Rect border_top_right{{window->position.x + window->size.w - border_width, window->position.y + window->size.h - border_width}, {border_width, border_width}};
+    Rect border_bottom_left{window->position, {border_width, border_width}};
+    Rect border_bottom_right{{window->position.x + window->size.w - border_width, window->position.y}, {border_width, border_width}};
+
+    border_left.SetColour(style.window_border_colour);
+    border_right.SetColour(style.window_border_colour);
+    border_top.SetColour(style.window_border_colour);
+    border_bottom.SetColour(style.window_border_colour);
+    border_top_left.SetColour(style.window_border_colour);
+    border_top_right.SetColour(style.window_border_colour);
+    border_bottom_left.SetColour(style.window_border_colour);
+    border_bottom_right.SetColour(style.window_border_colour);
 
     bool bl_hover = false, bl_press = false;
     bool br_hover = false, br_press = false;
@@ -230,6 +238,9 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
         window->mouse_offset = mouse_pos - window->position;
     }
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     if (context->active_id == GetId(name + "###border_left") || (bl_hover && !window->resizing))
         border_left.Render(shader);
     if (context->active_id == GetId(name + "###border_right") || (br_hover && !window->resizing))
@@ -246,11 +257,17 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
         border_bottom_left.Render(shader);
     if (context->active_id == GetId(name + "###border_bottom_right") || (bbr_hover && !window->resizing))
         border_bottom_right.Render(shader);
+
+    glDisable(GL_BLEND);
 }
 
 UiStyle::UiStyle()
 {
     window_colour_background = {0.3f, 0.3f, 0.3f, 1.0f};
+
+    window_border_colour = {1.0f, 1.0f, 1.0f, 0.2f};
+    window_border_width = 10;
+    window_border_radius = 5.0f;
 
     button_colour_normal = {0.0f, 0.0f, 1.0f, 1.0f};
     button_colour_highlight = {0.3f, 0.3f, 1.0f, 1.0f};
@@ -275,12 +292,18 @@ void Ui::Initialise()
     g_context->font = UiFont{"fonts/Montserrat/Montserrat-VariableFont_wght.ttf"};
     g_context->window_stack = {};
 
-    ResourceManager::LoadShader("default", "shaders/shader.vs", "shaders/shader.fs");
-    Shader &shader = ResourceManager::GetShader("default");
-    shader.Use();
+    ResourceManager::LoadShader("font", "shaders/default.vs", "shaders/font.fs");
+    ResourceManager::LoadShader("rect", "shaders/default.vs", "shaders/rect.fs");
 
     glm::mat4 projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
-    shader.SetMat4("projection", projection);
+
+    Shader &font_shader = ResourceManager::GetShader("font");
+    font_shader.Use();
+    font_shader.SetMat4("projection", projection);
+
+    Shader &rect_shader = ResourceManager::GetShader("rect");
+    rect_shader.Use();
+    rect_shader.SetMat4("projection", projection);
 }
 
 void Ui::Dispose()
@@ -347,7 +370,7 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
         context->current_window = window;
     }
 
-    Shader &shader = ResourceManager::GetShader("default");
+    Shader &shader = ResourceManager::GetShader("rect");
     window_rect.Render(shader);
 
     HandleWindowResizing(window, name, shader);
@@ -397,9 +420,11 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
     font.SetPosition({position.x + size.w / 2 - font_length / 2,
                       position.y + static_cast<UiInt>(static_cast<float>(font_size) * (font_divisors / 2) - (static_cast<float>(font_size) / 2) + (padding * 2))});
 
-    Shader &shader = ResourceManager::GetShader("default");
-    button_rect.Render(shader);
-    font.Render(name, font_size, shader);
+    Shader &rect_shader = ResourceManager::GetShader("rect");
+    Shader &font_shader = ResourceManager::GetShader("font");
+
+    button_rect.Render(rect_shader);
+    font.Render(name, font_size, font_shader);
 
     return pressed;
 }
@@ -432,9 +457,11 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
     font.SetColour({1.0f, 1.0f, 1.0f, 1.0f});
     font.SetPosition({position.x + 50, position.y});
 
-    Shader &shader = ResourceManager::GetShader("default");
-    checkbox_rect.Render(shader);
-    font.Render(name, 28, shader);
+    Shader &rect_shader = ResourceManager::GetShader("rect");
+    Shader &font_shader = ResourceManager::GetShader("font");
+
+    checkbox_rect.Render(rect_shader);
+    font.Render(name, 28, font_shader);
 }
 
 void Ui::SliderFloat(const std::string &name, float &current_val, float min_val, float max_val, UiVec2I position)
@@ -478,10 +505,12 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
     font.SetColour({1.0f, 1.0f, 1.0f, 1.0f});
     font.SetPosition({position.x + 50, position.y});
 
-    Shader &shader = ResourceManager::GetShader("default");
-    background_rect.Render(shader);
-    handle_rect.Render(shader);
-    font.Render(name, 28, shader);
+    Shader &rect_shader = ResourceManager::GetShader("rect");
+    Shader &font_shader = ResourceManager::GetShader("font");
+
+    background_rect.Render(rect_shader);
+    handle_rect.Render(rect_shader);
+    font.Render(name, 28, font_shader);
 }
 
 void Ui::TextBox(const std::string &name, std::string &text, UiVec2I size, UiVec2I position)
@@ -496,8 +525,9 @@ void Ui::TextBox(const std::string &name, std::string &text, UiVec2I size, UiVec
     Rect background_rect{position, size};
     background_rect.SetColour({0.15f, 0.15f, 0.15f, 1.0f});
 
-    const Shader &shader = ResourceManager::GetShader("default");
-    background_rect.Render(shader);
+    Shader &rect_shader = ResourceManager::GetShader("rect");
+
+    background_rect.Render(rect_shader);
 }
 
 UiStyle &Ui::GetStyle()

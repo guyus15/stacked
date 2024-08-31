@@ -13,9 +13,6 @@ void ResourceManager::LoadShader(const std::string &name, const std::string &ver
     if (Get().m_shaders.find(name) != Get().m_shaders.end())
         std::cout << "Writing over shader with name '" << name << "'.\n";
 
-    std::string vertex_shader_path = "shaders/shader.vs";
-    std::string fragment_shader_path = "shaders/shader.fs";
-
     std::string vertex_code, fragment_code;
     std::ifstream vertex_shader_file, fragment_shader_file;
 
@@ -24,8 +21,8 @@ void ResourceManager::LoadShader(const std::string &name, const std::string &ver
 
     try
     {
-        vertex_shader_file.open(vertex_shader_path);
-        fragment_shader_file.open(fragment_shader_path);
+        vertex_shader_file.open(vertex_file_path);
+        fragment_shader_file.open(fragment_file_path);
 
         std::stringstream vertex_shader_stream, fragment_shader_stream;
 

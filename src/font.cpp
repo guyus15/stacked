@@ -115,9 +115,7 @@ void UiFont::Render(const std::string &text, const int size, const Shader &shade
     }
 
     shader.Use();
-
     shader.SetVec4("u_colour", m_colour);
-    shader.SetFloat("u_radius", 0.0f);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(m_vao);
