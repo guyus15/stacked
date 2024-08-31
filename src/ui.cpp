@@ -120,6 +120,24 @@ static void GetWidgetInteraction(const Rect &rect, const std::string &name, bool
         *pressed = local_pressed;
 }
 
+// TODO: Constrain window position to screen dimensions.
+static void MoveWindow(UiWindow *window, UiVec2I target)
+{
+    UiContext *context = GetContext();
+
+    window->resizing = true; // Maybe change to window->moving?
+    window->position = target;
+}
+
+// TODO: Constrain window size to screen dimensions and contents of the window.
+static void ResizeWindow(UiWindow *window, UiVec2I target)
+{
+    UiContext *context = GetContext();
+
+    window->resizing = true;
+    window->size = target;
+}
+
 static void HandleWindowResizing(UiWindow *window, const std::string &name, const Shader &shader)
 {
     UiContext *context = GetContext();
@@ -173,68 +191,89 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
     if (border_pressed)
         window->mouse_offset = mouse_pos - window->position;
 
-    // FIXME: Reorganise this to remove duplicate code.
+    // FIXME: Reduce duplicate code below.
 
     if (context->active_id == GetId(name + "###border_left"))
     {
-        window->resizing = true;
-        window->position.x = mouse_pos.x - window->mouse_offset.x;
-        window->size.w += -(window->position - window->previous_position).x;
+        int pos_x = mouse_pos.x - window->mouse_offset.x;
+        MoveWindow(window, {pos_x, window->position.y});
+
+        int size_w = window->size.w - (window->position - window->previous_position).x;
+        ResizeWindow(window, {size_w, window->size.h});
     }
 
     if (context->active_id == GetId(name + "###border_right"))
     {
-        window->resizing = true;
-        window->size.w += (mouse_pos.x - window->position.x) - window->mouse_offset.x;
+        int size_w = window->size.w + (mouse_pos.x - window->position.x) - window->mouse_offset.x;
+        ResizeWindow(window, {size_w, window->size.h});
+
         window->mouse_offset = mouse_pos - window->position;
     }
-
-    if (context->active_id == GetId(name + "###border_top"))
+    window->position.y if (context->active_id == GetId(name + "###border_top"))
     {
-        window->resizing = true;
-        window->size.h += (mouse_pos.y - window->position.y) - window->mouse_offset.y;
+        int size_h = window->size.h + (mouse_pos.y - window->position.y) - window->mouse_offset.y;
+        ResizeWindow(window, {window->size.w, size_h});
+
         window->mouse_offset = mouse_pos - window->position;
     }
 
     if (context->active_id == GetId(name + "###border_bottom"))
     {
-        window->resizing = true;
-        window->position.y = mouse_pos.y - window->mouse_offset.y;
-        window->size.h += -(window->position - window->previous_position).y;
+        int pos_y = mouse_pos.y - window->mouse_offset.y;
+        MoveWindow(window, {window->position.x, pos_y});
+
+        int size_h = window->size.h - (window->position - window->previous_position).y;
+        ResizeWindow(window, {window->size.w, size_h});
     }
 
     if (context->active_id == GetId(name + "###border_top_left"))
     {
-        window->resizing = true;
-        window->position.x = mouse_pos.x - window->mouse_offset.x;
-        window->size.w += -(window->position - window->previous_position).x;
-        window->size.h += (mouse_pos.y - window->position.y) - window->mouse_offset.y;
+        int pos_x = mouse_pos.x - window->mouse_offset.x;
+        MoveWindow(window, {pos_x, window->position.y});
+
+        int size_w = window->size.w - (window->position - window->previous_position).x;
+        int size_h = window->size.h + (mouse_pos.y - window->position.y) - window->mouse_offset.y;
+        ResizeWindow(window, {size_w, size_h});
+
         window->mouse_offset = mouse_pos - window->position;
     }
 
     if (context->active_id == GetId(name + "###border_top_right"))
     {
-        window->resizing = true;
-        window->size.h += (mouse_pos.y - window->position.y) - window->mouse_offset.y;
-        window->size.w += (mouse_pos.x - window->position.x) - window->mouse_offset.x;
+        int size_w = window->size.w + (mouse_pos.x - window->position.x) - window->mouse_offset.x;
+        int size_h = window->size.h + (mouse_pos.y - window->position.y) - window->mouse_offset.y;
+
+        ResizeWindow(window, {size_w, size_h});
+
         window->mouse_offset = mouse_pos - window->position;
     }
 
     if (context->active_id == GetId(name + "###border_bottom_left"))
     {
-        window->resizing = true;
-        window->position.x = mouse_pos.x - window->mouse_offset.x;
-        window->size.w += -(window->position - window->previous_position).x;
-        window->position.y = mouse_pos.y - window->mouse_offset.y;
-        window->size.h += -(window->position - window->previous_position).y;
+        int pos_x = mouse_pos.x - window->mouse_offset.x;
+        MoveWindow(window, {pos_x, window->position.y});
+
+        int size_w = window->size.w - (window->position - window->previous_position).x;
+        ResizeWindow(window, {size_w, window->size.h});
+
+        int pos_y = mouse_pos.y - window->mouse_offset.y;
+        MoveWindow(window, {window->position.x, pos_y});
+
+        int size_h = window->size.h - (window->position - window->previous_position).y;
+        ResizeWindow(window, {window->size.w, size_h});
     }
 
     if (context->active_id == GetId(name + "###border_bottom_right"))
     {
-        window->resizing = true;
-        window->size.w += (mouse_pos.x - window->position.x) - window->mouse_offset.x;
-        window->position.y = mouse_pos.y - window->mouse_offset.y;
-        window->size.h += -(window->position - window->previous_position).y;
+        int size_w = window->size.w + (mouse_pos.x - window->position.x) - window->mouse_offset.x;
+        ResizeWindow(window, {size_w, window->size.y});
+
+        int pos_y = mouse_pos.y - window->mouse_offset.y;
+        MoveWindow(window, {window->position.x, pos_y});
+
+        int size_h = window->size.h - (window->position - window->previous_position).y;
+        ResizeWindow(window, {window->size.w, size_h});
+
         window->mouse_offset = mouse_pos - window->position;
     }
 
@@ -263,7 +302,7 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
 
 UiStyle::UiStyle()
 {
-    window_colour_background = {0.3f, 0.3f, 0.3f, 1.0f};
+    window_colour_background = {0.2f, 0.2f, 0.2f, 1.0f};
 
     window_border_colour = {1.0f, 1.0f, 1.0f, 0.2f};
     window_border_width = 10;
