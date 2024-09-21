@@ -49,6 +49,7 @@ struct UiContext
     UiWindow *hot_window;
     UiWindow *focused_window;
     UiInt current_z_index;
+    bool window_resizing;
 };
 
 UiContext *g_context = nullptr;
@@ -166,23 +167,39 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
 
     int border_width = style.window_border_width;
 
-    Rect border_left{{window->position.x, window->position.y + border_width}, {border_width, window->size.h - border_width * 2}};
-    Rect border_right{{window->position.x + window->size.w - border_width, window->position.y + border_width}, {border_width, window->size.h - border_width * 2}};
-    Rect border_top{{window->position.x + border_width, window->position.y + window->size.h - border_width}, {window->size.w - border_width * 2, border_width}};
-    Rect border_bottom{{window->position.x + border_width, window->position.y}, {window->size.w - border_width * 2, border_width}};
-    Rect border_top_left{{window->position.x, window->position.y + window->size.h - border_width}, {border_width, border_width}};
-    Rect border_top_right{{window->position.x + window->size.w - border_width, window->position.y + window->size.h - border_width}, {border_width, border_width}};
-    Rect border_bottom_left{window->position, {border_width, border_width}};
-    Rect border_bottom_right{{window->position.x + window->size.w - border_width, window->position.y}, {border_width, border_width}};
+    std::unique_ptr<Rect> border_left = std::make_unique<Rect>(
+        UiVec2I{window->position.x, window->position.y + border_width},
+        UiVec2I{border_width, window->size.h - border_width * 2});
+    std::unique_ptr<Rect> border_right = std::make_unique<Rect>(
+        UiVec2I{window->position.x + window->size.w - border_width, window->position.y + border_width},
+        UiVec2I{border_width, window->size.h - border_width * 2});
+    std::unique_ptr<Rect> border_top = std::make_unique<Rect>(
+        UiVec2I{window->position.x + border_width, window->position.y + window->size.h - border_width},
+        UiVec2I{window->size.w - border_width * 2, border_width});
+    std::unique_ptr<Rect> border_bottom = std::make_unique<Rect>(
+        UiVec2I{window->position.x + border_width, window->position.y},
+        UiVec2I{window->size.w - border_width * 2, border_width});
+    std::unique_ptr<Rect> border_top_left = std::make_unique<Rect>(
+        UiVec2I{window->position.x, window->position.y + window->size.h - border_width},
+        UiVec2I{border_width, border_width});
+    std::unique_ptr<Rect> border_top_right = std::make_unique<Rect>(
+        UiVec2I{window->position.x + window->size.w - border_width, window->position.y + window->size.h - border_width},
+        UiVec2I{border_width, border_width});
+    std::unique_ptr<Rect> border_bottom_left = std::make_unique<Rect>(
+        window->position,
+        UiVec2I{border_width, border_width});
+    std::unique_ptr<Rect> border_bottom_right = std::make_unique<Rect>(
+        UiVec2I{window->position.x + window->size.w - border_width, window->position.y},
+        UiVec2I{border_width, border_width});
 
-    border_left.SetColour(style.window_border_colour);
-    border_right.SetColour(style.window_border_colour);
-    border_top.SetColour(style.window_border_colour);
-    border_bottom.SetColour(style.window_border_colour);
-    border_top_left.SetColour(style.window_border_colour);
-    border_top_right.SetColour(style.window_border_colour);
-    border_bottom_left.SetColour(style.window_border_colour);
-    border_bottom_right.SetColour(style.window_border_colour);
+    border_left->SetColour(style.window_border_colour);
+    border_right->SetColour(style.window_border_colour);
+    border_top->SetColour(style.window_border_colour);
+    border_bottom->SetColour(style.window_border_colour);
+    border_top_left->SetColour(style.window_border_colour);
+    border_top_right->SetColour(style.window_border_colour);
+    border_bottom_left->SetColour(style.window_border_colour);
+    border_bottom_right->SetColour(style.window_border_colour);
 
     bool bl_hover = false, bl_press = false;
     bool br_hover = false, br_press = false;
@@ -193,14 +210,17 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
     bool bbl_hover = false, bbl_press = false;
     bool bbr_hover = false, bbr_press = false;
 
-    GetWidgetInteraction(border_left, name + "###border_left", &bl_hover, &bl_press, nullptr);
-    GetWidgetInteraction(border_right, name + "###border_right", &br_hover, &br_press, nullptr);
-    GetWidgetInteraction(border_top, name + "###border_top", &bt_hover, &bt_press, nullptr);
-    GetWidgetInteraction(border_bottom, name + "###border_bottom", &bb_hover, &bb_press, nullptr);
-    GetWidgetInteraction(border_top_left, name + "###border_top_left", &btl_hover, &btl_press, nullptr);
-    GetWidgetInteraction(border_top_right, name + "###border_top_right", &btr_hover, &btr_press, nullptr);
-    GetWidgetInteraction(border_bottom_left, name + "###border_bottom_left", &bbl_hover, &bbl_press, nullptr);
-    GetWidgetInteraction(border_bottom_right, name + "###border_bottom_right", &bbr_hover, &bbr_press, nullptr);
+    if (context->hot_window == window)
+    {
+        GetWidgetInteraction(*border_left, name + "###border_left", &bl_hover, &bl_press, nullptr);
+        GetWidgetInteraction(*border_right, name + "###border_right", &br_hover, &br_press, nullptr);
+        GetWidgetInteraction(*border_top, name + "###border_top", &bt_hover, &bt_press, nullptr);
+        GetWidgetInteraction(*border_bottom, name + "###border_bottom", &bb_hover, &bb_press, nullptr);
+        GetWidgetInteraction(*border_top_left, name + "###border_top_left", &btl_hover, &btl_press, nullptr);
+        GetWidgetInteraction(*border_top_right, name + "###border_top_right", &btr_hover, &btr_press, nullptr);
+        GetWidgetInteraction(*border_bottom_left, name + "###border_bottom_left", &bbl_hover, &bbl_press, nullptr);
+        GetWidgetInteraction(*border_bottom_right, name + "###border_bottom_right", &bbr_hover, &bbr_press, nullptr);
+    }
 
     bool border_pressed = bl_press | br_press | bt_press | bb_press |
                           btl_press | btr_press | bbl_press | bbr_press;
@@ -209,7 +229,12 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
     mouse_pos.y = 600 - mouse_pos.y;
 
     if (border_pressed)
+    {
+        context->window_resizing = true;
+        context->current_z_index += 1;
+        window->z_index = context->current_z_index;
         window->mouse_offset = mouse_pos - window->position;
+    }
 
     // FIXME: Reduce duplicate code below.
 
@@ -300,22 +325,22 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if (context->active_id == GetId(name + "###border_left") || (bl_hover && !window->resizing))
-        border_left.Render(shader);
-    if (context->active_id == GetId(name + "###border_right") || (br_hover && !window->resizing))
-        border_right.Render(shader);
-    if (context->active_id == GetId(name + "###border_top") || (bt_hover && !window->resizing))
-        border_top.Render(shader);
-    if (context->active_id == GetId(name + "###border_bottom") || (bb_hover && !window->resizing))
-        border_bottom.Render(shader);
-    if (context->active_id == GetId(name + "###border_top_left") || (btl_hover && !window->resizing))
-        border_top_left.Render(shader);
-    if (context->active_id == GetId(name + "###border_top_right") || (btr_hover && !window->resizing))
-        border_top_right.Render(shader);
-    if (context->active_id == GetId(name + "###border_bottom_left") || (bbl_hover && !window->resizing))
-        border_bottom_left.Render(shader);
-    if (context->active_id == GetId(name + "###border_bottom_right") || (bbr_hover && !window->resizing))
-        border_bottom_right.Render(shader);
+    if (context->active_id == GetId(name + "###border_left") || (bl_hover && !context->window_resizing))
+        window->widget_rects.push_back(std::move(border_left));
+    if (context->active_id == GetId(name + "###border_right") || (br_hover && !context->window_resizing))
+        window->widget_rects.push_back(std::move(border_right));
+    if (context->active_id == GetId(name + "###border_top") || (bt_hover && !context->window_resizing))
+        window->widget_rects.push_back(std::move(border_top));
+    if (context->active_id == GetId(name + "###border_bottom") || (bb_hover && !context->window_resizing))
+        window->widget_rects.push_back(std::move(border_bottom));
+    if (context->active_id == GetId(name + "###border_top_left") || (btl_hover && !context->window_resizing))
+        window->widget_rects.push_back(std::move(border_top_left));
+    if (context->active_id == GetId(name + "###border_top_right") || (btr_hover && !context->window_resizing))
+        window->widget_rects.push_back(std::move(border_top_right));
+    if (context->active_id == GetId(name + "###border_bottom_left") || (bbl_hover && !context->window_resizing))
+        window->widget_rects.push_back(std::move(border_bottom_left));
+    if (context->active_id == GetId(name + "###border_bottom_right") || (bbr_hover && !context->window_resizing))
+        window->widget_rects.push_back(std::move(border_bottom_right));
 
     glDisable(GL_BLEND);
 }
@@ -355,6 +380,7 @@ void Ui::Initialise()
     g_context->font = UiFont{"fonts/Montserrat/Montserrat-VariableFont_wght.ttf"};
     g_context->window_stack = {};
     g_context->current_z_index = 0;
+    g_context->window_resizing = false;
 
     ResourceManager::LoadShader("font", "shaders/default.vs", "shaders/font.fs");
     ResourceManager::LoadShader("rect", "shaders/default.vs", "shaders/rect.fs");
@@ -433,6 +459,7 @@ void Ui::EndFrame()
     {
         context->active_id = 0;
         context->current_window = nullptr;
+        context->window_resizing = false;
     }
 
     std::sort(context->windows.begin(), context->windows.end(),
@@ -488,6 +515,7 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
     window->window_rect->SetColour({window->colour.x, window->colour.y, window->colour.z, 1.0f});
 
     window->is_hovered = window->window_rect->IsHovered();
+    window->resizing = false;
 
     Shader &shader = ResourceManager::GetShader("rect");
     HandleWindowResizing(window, name, shader);
