@@ -4,7 +4,7 @@
 
 #include "font.h"
 #include "rect.h"
-#include "resource_manager.h"
+#include "resources.h"
 #include "text.h"
 
 #include <glm/ext/matrix_clip_space.hpp>
@@ -27,10 +27,9 @@ struct UiWindow
     UiVec2I previous_position;
     UiVec2I size;
     UiVec2I mouse_offset;
+    UiInt z_index;
     bool resizing;
     bool is_hovered;
-    UiVec3F colour;
-    UiInt z_index;
     std::unique_ptr<Rect> window_rect;
     std::vector<std::unique_ptr<Rect>> widget_rects;
     std::vector<std::unique_ptr<UiText>> widget_texts;
@@ -39,17 +38,18 @@ struct UiWindow
 struct UiContext
 {
     bool initialised;
+    bool window_resizing;
     UiStyle style;
     UiFont font;
     UiId hot_id;
     UiId active_id;
+    UiInt current_z_index;
+    UiResources resources;
     UiStack<UiWindow *> window_stack;
-    std::vector<UiWindow *> windows;
     UiWindow *current_window;
     UiWindow *hot_window;
     UiWindow *focused_window;
-    UiInt current_z_index;
-    bool window_resizing;
+    std::vector<UiWindow *> windows;
 };
 
 UiContext *g_context = nullptr;
@@ -382,16 +382,16 @@ void Ui::Initialise()
     g_context->current_z_index = 0;
     g_context->window_resizing = false;
 
-    ResourceManager::LoadShader("font", "shaders/default.vs", "shaders/font.fs");
-    ResourceManager::LoadShader("rect", "shaders/default.vs", "shaders/rect.fs");
+    g_context->resources.LoadShader("font", "shaders/default.vs", "shaders/font.fs");
+    g_context->resources.LoadShader("rect", "shaders/default.vs", "shaders/rect.fs");
 
     glm::mat4 projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
 
-    Shader &font_shader = ResourceManager::GetShader("font");
+    Shader &font_shader = g_context->resources.GetShader("font");
     font_shader.Use();
     font_shader.SetMat4("projection", projection);
 
-    Shader &rect_shader = ResourceManager::GetShader("rect");
+    Shader &rect_shader = g_context->resources.GetShader("rect");
     rect_shader.Use();
     rect_shader.SetMat4("projection", projection);
 
@@ -468,8 +468,8 @@ void Ui::EndFrame()
                   return win1->z_index < win2->z_index;
               });
 
-    Shader &rect_shader = ResourceManager::GetShader("rect");
-    Shader &font_shader = ResourceManager::GetShader("font");
+    Shader &rect_shader = context->resources.GetShader("rect");
+    Shader &font_shader = context->resources.GetShader("font");
 
     for (UiWindow *window : context->windows)
     {
@@ -498,26 +498,21 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
         window = CreateNewWindow(name);
         window->position = position;
         window->size = size;
-        window->colour = {
-            (float)rand() / (float)RAND_MAX,
-            (float)rand() / (float)RAND_MAX,
-            (float)rand() / (float)RAND_MAX,
-        };
     }
 
     UiContext *context = GetContext();
 
-    context->window_stack.Push(window);
-
     const UiStyle &style = context->style;
 
+    context->window_stack.Push(window);
+
     window->window_rect = std::make_unique<Rect>(window->position, window->size);
-    window->window_rect->SetColour({window->colour.x, window->colour.y, window->colour.z, 1.0f});
+    window->window_rect->SetColour(style.window_colour_background);
 
     window->is_hovered = window->window_rect->IsHovered();
     window->resizing = false;
 
-    Shader &shader = ResourceManager::GetShader("rect");
+    Shader &shader = context->resources.GetShader("rect");
     HandleWindowResizing(window, name, shader);
 }
 
@@ -670,7 +665,7 @@ void Ui::TextBox(const std::string &name, std::string &text, UiVec2I size, UiVec
     std::unique_ptr<Rect> background_rect = std::make_unique<Rect>(position, size);
     background_rect->SetColour({0.15f, 0.15f, 0.15f, 1.0f});
 
-    Shader &rect_shader = ResourceManager::GetShader("rect");
+    Shader &rect_shader = context->resources.GetShader("rect");
 
     current_window->widget_rects.push_back(std::move(background_rect));
 }

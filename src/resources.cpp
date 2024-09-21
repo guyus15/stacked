@@ -1,4 +1,4 @@
-#include "resource_manager.h"
+#include "resources.h"
 
 #include "shader.h"
 
@@ -6,11 +6,11 @@
 #include <iostream>
 #include <sstream>
 
-ResourceManager ResourceManager::s_instance;
-
-void ResourceManager::LoadShader(const std::string &name, const std::string &vertex_file_path, const std::string &fragment_file_path)
+void UiResources::LoadShader(const std::string &name,
+                             const std::string &vertex_file_path,
+                             const std::string &fragment_file_path)
 {
-    if (Get().m_shaders.find(name) != Get().m_shaders.end())
+    if (m_shaders.find(name) != m_shaders.end())
         std::cout << "Writing over shader with name '" << name << "'.\n";
 
     std::string vertex_code, fragment_code;
@@ -43,21 +43,16 @@ void ResourceManager::LoadShader(const std::string &name, const std::string &ver
     Shader shader{};
     shader.Compile(vertex_code, fragment_code);
 
-    Get().m_shaders[name] = shader;
+    m_shaders[name] = shader;
 }
 
-Shader &ResourceManager::GetShader(const std::string &name)
+Shader &UiResources::GetShader(const std::string &name)
 {
-    if (Get().m_shaders.find(name) == Get().m_shaders.end())
+    if (m_shaders.find(name) == m_shaders.end())
     {
         std::cerr << "Error: Could not find shader with name '" << name << "'\n.";
         throw std::runtime_error{"Failed to get shader."};
     }
 
-    return Get().m_shaders[name];
-}
-
-ResourceManager &ResourceManager::Get()
-{
-    return s_instance;
+    return m_shaders[name];
 }
