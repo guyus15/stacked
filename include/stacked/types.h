@@ -2,6 +2,7 @@
 #define TYPES_H
 
 #include <cstdint>
+#include <cstdlib>
 #include <stack>
 #include <vector>
 
@@ -166,13 +167,15 @@ struct UiStorage
     std::vector<UiPair> data;
 
     void SetInt(UiId key, int val);
-    int GetInt(UiId key);
+    int GetInt(UiId key) const;
 
     void SetFloat(UiId key, float val);
-    float GetFloat(UiId key);
+    float GetFloat(UiId key) const;
 
     void SetVoidPtr(UiId key, void *val);
-    void *GetVoidPtr(UiId key);
+    void *GetVoidPtr(UiId key) const;
+
+    size_t GetSize() const;
 };
 
 #endif // TYPES_H

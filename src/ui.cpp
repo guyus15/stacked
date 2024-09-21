@@ -5,18 +5,20 @@
 #include "font.h"
 #include "rect.h"
 #include "resource_manager.h"
+#include "text.h"
 
 #include <glm/ext/matrix_clip_space.hpp>
 
+#include <algorithm>
+#include <ctime>
 #include <iostream>
+#include <memory>
 #include <unordered_map>
 #include <stack>
 
 #define min(a, b) ((a) < (b)) ? (a) : (b)
 #define clamp(l, u, c) ((c) > (u)) ? (u) : ((c) < (l)) ? (l) \
                                                        : (c)
-
-// FIXME: Standardise naming of dimensions/size. It should be one or the other, not both.
 
 struct UiWindow
 {
@@ -26,6 +28,12 @@ struct UiWindow
     UiVec2I size;
     UiVec2I mouse_offset;
     bool resizing;
+    bool is_hovered;
+    UiVec3F colour;
+    UiInt z_index;
+    std::unique_ptr<Rect> window_rect;
+    std::vector<std::unique_ptr<Rect>> widget_rects;
+    std::vector<std::unique_ptr<UiText>> widget_texts;
 };
 
 struct UiContext
@@ -33,11 +41,13 @@ struct UiContext
     bool initialised;
     UiStyle style;
     UiFont font;
-    UiStack<UiWindow *> window_stack;
-    UiStorage windows;
     UiId hot_id;
     UiId active_id;
+    UiStack<UiWindow *> window_stack;
+    std::vector<UiWindow *> windows;
     UiWindow *current_window;
+    UiWindow *hot_window;
+    UiInt current_z_index;
 };
 
 UiContext *g_context = nullptr;
@@ -56,7 +66,14 @@ static UiId GetId(const std::string &name)
 static UiWindow *FindWindowById(const UiId id)
 {
     UiContext *context = GetContext();
-    return static_cast<UiWindow *>(context->windows.GetVoidPtr(id));
+
+    for (UiWindow *window : context->windows)
+    {
+        if (window->id == id)
+            return window;
+    }
+
+    return nullptr;
 }
 
 static UiWindow *FindWindowByName(const std::string &name)
@@ -71,8 +88,10 @@ static UiWindow *CreateNewWindow(const std::string &name)
 
     UiId id = GetId(name);
     UiWindow *window = new UiWindow{id};
+    window->z_index = context->current_z_index + 1;
+    context->current_z_index = window->z_index;
 
-    context->windows.SetVoidPtr(id, window);
+    context->windows.push_back(window);
 
     return window;
 }
@@ -209,7 +228,7 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
 
         window->mouse_offset = mouse_pos - window->position;
     }
-    window->position.y if (context->active_id == GetId(name + "###border_top"))
+    if (context->active_id == GetId(name + "###border_top"))
     {
         int size_h = window->size.h + (mouse_pos.y - window->position.y) - window->mouse_offset.y;
         ResizeWindow(window, {window->size.w, size_h});
@@ -300,6 +319,10 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
     glDisable(GL_BLEND);
 }
 
+static void AddWindowContent(UiWindow *window, UiVec2I content_position, UiVec2I content_size)
+{
+}
+
 UiStyle::UiStyle()
 {
     window_colour_background = {0.2f, 0.2f, 0.2f, 1.0f};
@@ -330,6 +353,7 @@ void Ui::Initialise()
     g_context->initialised = true;
     g_context->font = UiFont{"fonts/Montserrat/Montserrat-VariableFont_wght.ttf"};
     g_context->window_stack = {};
+    g_context->current_z_index = 0;
 
     ResourceManager::LoadShader("font", "shaders/default.vs", "shaders/font.fs");
     ResourceManager::LoadShader("rect", "shaders/default.vs", "shaders/rect.fs");
@@ -343,6 +367,8 @@ void Ui::Initialise()
     Shader &rect_shader = ResourceManager::GetShader("rect");
     rect_shader.Use();
     rect_shader.SetMat4("projection", projection);
+
+    srand(time(nullptr));
 }
 
 void Ui::Dispose()
@@ -354,6 +380,7 @@ void Ui::BeginFrame()
 {
     UiContext *context = GetContext();
     context->hot_id = 0;
+    context->hot_window = nullptr;
 
     UiWindow *window = context->current_window;
     if (window)
@@ -364,21 +391,70 @@ void Ui::EndFrame()
 {
     UiContext *context = GetContext();
 
-    UiWindow *window = context->current_window;
+    UiWindow *hot_window = context->hot_window;
 
-    if (window && context->hot_id == window->id && context->active_id == 0 && !window->resizing)
+    for (UiWindow *window : context->windows)
     {
-        UiVec2I mouse_pos = Input::GetMousePosition();
-        mouse_pos.y = 600 - mouse_pos.y;
+        if (window->is_hovered)
+        {
+            if (!hot_window || hot_window->z_index < window->z_index)
+                context->hot_window = window;
+        }
+    }
+
+    UiVec2I mouse_pos = Input::GetMousePosition();
+    mouse_pos.y = 600 - mouse_pos.y;
+
+    if (context->hot_window && context->active_id == 0)
+    {
+        UiWindow *window = context->hot_window;
 
         if (Input::GetMouseDown(MouseButton::LeftMouse))
+        {
+            context->current_window = window;
+            context->current_z_index += 1;
+            window->z_index = context->current_z_index;
             window->mouse_offset = mouse_pos - window->position;
-        else if (Input::GetMouse(MouseButton::LeftMouse))
+        }
+    }
+
+    if (context->current_window)
+    {
+        UiWindow *window = context->current_window;
+
+        if (Input::GetMouse(MouseButton::LeftMouse))
             window->position = mouse_pos - window->mouse_offset;
     }
 
     if (Input::GetMouseUp(MouseButton::LeftMouse))
+    {
         context->active_id = 0;
+        context->current_window = nullptr;
+    }
+
+    std::sort(context->windows.begin(), context->windows.end(),
+              [](UiWindow *win1, UiWindow *win2)
+              {
+                  return win1->z_index < win2->z_index;
+              });
+
+    Shader &rect_shader = ResourceManager::GetShader("rect");
+    Shader &font_shader = ResourceManager::GetShader("font");
+
+    for (UiWindow *window : context->windows)
+    {
+        window->window_rect->Render(rect_shader);
+
+        for (const auto &widget_rect : window->widget_rects)
+            widget_rect->Render(rect_shader);
+
+        window->widget_rects.clear();
+
+        for (const auto &widget_text : window->widget_texts)
+            widget_text->Render(context->font, font_shader);
+
+        window->widget_texts.clear();
+    }
 }
 
 // TODO: Pass window flags in to modify the behaviour of the window.
@@ -392,6 +468,11 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
         window = CreateNewWindow(name);
         window->position = position;
         window->size = size;
+        window->colour = {
+            (float)rand() / (float)RAND_MAX,
+            (float)rand() / (float)RAND_MAX,
+            (float)rand() / (float)RAND_MAX,
+        };
     }
 
     UiContext *context = GetContext();
@@ -400,18 +481,12 @@ void Ui::BeginWindow(const std::string &name, UiVec2I size, UiVec2I position)
 
     const UiStyle &style = context->style;
 
-    Rect window_rect{window->position, window->size};
-    window_rect.SetColour(style.window_colour_background);
+    window->window_rect = std::make_unique<Rect>(window->position, window->size);
+    window->window_rect->SetColour({window->colour.x, window->colour.y, window->colour.z, 1.0f});
 
-    if (window_rect.IsHovered())
-    {
-        context->hot_id = GetId(name);
-        context->current_window = window;
-    }
+    window->is_hovered = window->window_rect->IsHovered();
 
     Shader &shader = ResourceManager::GetShader("rect");
-    window_rect.Render(shader);
-
     HandleWindowResizing(window, name, shader);
 }
 
@@ -429,23 +504,23 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
 {
     UiContext *context = GetContext();
 
-    const UiWindow *current_window = context->window_stack.Top();
+    UiWindow *current_window = context->window_stack.Top();
     position += current_window->position;
 
     const UiStyle &style = context->style;
 
-    Rect button_rect{position, size};
-    button_rect.SetRadius(style.button_radius);
-    button_rect.SetColour(style.button_colour_normal);
+    std::unique_ptr<Rect> button_rect = std::make_unique<Rect>(position, size);
+    button_rect->SetRadius(style.button_radius);
+    button_rect->SetColour(style.button_colour_normal);
 
     bool hovered = false, pressed = false, held = false;
-    GetWidgetInteraction(button_rect, name, &hovered, &pressed, &held);
+    GetWidgetInteraction(*button_rect, name, &hovered, &pressed, &held);
 
     if (hovered)
-        button_rect.SetColour(style.button_colour_highlight);
+        button_rect->SetColour(style.button_colour_highlight);
 
     if (held)
-        button_rect.SetColour(style.button_colour_press);
+        button_rect->SetColour(style.button_colour_press);
 
     UiFont &font = context->font;
     int font_size = min(size.w / name.size() * 2, size.h);
@@ -454,16 +529,15 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
     int font_length = font_size * name.size() / 2;
     float font_divisors = size.h / static_cast<float>(font_size);
 
-    font.Load(font_size);
-    font.SetColour(style.button_font_colour);
-    font.SetPosition({position.x + size.w / 2 - font_length / 2,
-                      position.y + static_cast<UiInt>(static_cast<float>(font_size) * (font_divisors / 2) - (static_cast<float>(font_size) / 2) + (padding * 2))});
+    std::unique_ptr<UiText> button_text = std::make_unique<UiText>(
+        name,
+        font_size,
+        UiVec2I{position.x + size.w / 2 - font_length / 2,
+                position.y + static_cast<UiInt>(static_cast<float>(font_size) * (font_divisors / 2) - (static_cast<float>(font_size) / 2) + (padding * 2))},
+        style.button_font_colour);
 
-    Shader &rect_shader = ResourceManager::GetShader("rect");
-    Shader &font_shader = ResourceManager::GetShader("font");
-
-    button_rect.Render(rect_shader);
-    font.Render(name, font_size, font_shader);
+    current_window->widget_rects.push_back(std::move(button_rect));
+    current_window->widget_texts.push_back(std::move(button_text));
 
     return pressed;
 }
@@ -472,54 +546,52 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
 {
     UiContext *context = GetContext();
 
-    const UiWindow *current_window = context->window_stack.Top();
+    UiWindow *current_window = context->window_stack.Top();
     position += current_window->position;
 
     const UiStyle &style = context->style;
 
-    Rect checkbox_rect{position, {50, 50}};
-    checkbox_rect.SetRadius(style.checkbox_radius);
+    std::unique_ptr<Rect> checkbox_rect = std::make_unique<Rect>(position, UiVec2I{50, 50});
+    checkbox_rect->SetRadius(style.checkbox_radius);
 
     bool pressed = false;
-    GetWidgetInteraction(checkbox_rect, name, nullptr, &pressed, nullptr);
+    GetWidgetInteraction(*checkbox_rect, name, nullptr, &pressed, nullptr);
 
     if (pressed)
         enabled = !enabled;
 
     if (enabled)
-        checkbox_rect.SetColour(style.checkbox_colour_enabled);
+        checkbox_rect->SetColour(style.checkbox_colour_enabled);
     else
-        checkbox_rect.SetColour(style.checkbox_colour_normal);
+        checkbox_rect->SetColour(style.checkbox_colour_normal);
 
-    UiFont &font = context->font;
-    font.Load(28);
-    font.SetColour({1.0f, 1.0f, 1.0f, 1.0f});
-    font.SetPosition({position.x + 50, position.y});
+    std::unique_ptr<UiText> checkbox_text = std::make_unique<UiText>(
+        name,
+        28,
+        UiVec2I{position.x + 50, position.y},
+        UiVec4F{1.0f, 1.0f, 1.0f, 1.0f});
 
-    Shader &rect_shader = ResourceManager::GetShader("rect");
-    Shader &font_shader = ResourceManager::GetShader("font");
-
-    checkbox_rect.Render(rect_shader);
-    font.Render(name, 28, font_shader);
+    current_window->widget_rects.push_back(std::move(checkbox_rect));
+    current_window->widget_texts.push_back(std::move(checkbox_text));
 }
 
 void Ui::SliderFloat(const std::string &name, float &current_val, float min_val, float max_val, UiVec2I position)
 {
     UiContext *context = GetContext();
 
-    const UiWindow *current_window = context->window_stack.Top();
+    UiWindow *current_window = context->window_stack.Top();
     position += current_window->position;
 
     const UiStyle &style = context->style;
 
-    Rect background_rect{position, {200, 20}};
-    background_rect.SetColour(style.slider_colour_background);
+    std::unique_ptr<Rect> background_rect = std::make_unique<Rect>(position, UiVec2I{200, 20});
+    background_rect->SetColour(style.slider_colour_background);
 
     current_val = clamp(min_val, max_val, current_val);
 
     const float range = max_val - min_val;
 
-    GetWidgetInteraction(background_rect, name, nullptr, nullptr, nullptr);
+    GetWidgetInteraction(*background_rect, name, nullptr, nullptr, nullptr);
 
     if (context->active_id == GetId(name))
     {
@@ -536,37 +608,35 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
 
     const float new_percent = (current_val - min_val) / range;
 
-    Rect handle_rect{{position.x + static_cast<int>(new_percent * (200.0f - 20.0f)), position.y}, {20, 20}};
-    handle_rect.SetColour(style.slider_colour_handle);
+    std::unique_ptr<Rect> handle_rect = std::make_unique<Rect>(UiVec2I{position.x + static_cast<int>(new_percent * (200.0f - 20.0f)), position.y}, UiVec2I{20, 20});
+    handle_rect->SetColour(style.slider_colour_handle);
 
-    UiFont &font = context->font;
-    font.Load(28);
-    font.SetColour({1.0f, 1.0f, 1.0f, 1.0f});
-    font.SetPosition({position.x + 50, position.y});
+    std::unique_ptr<UiText> text = std::make_unique<UiText>(
+        name,
+        28,
+        UiVec2I{position.x + 50, position.y},
+        UiVec4F{1.0f, 1.0f, 1.0f, 1.0f});
 
-    Shader &rect_shader = ResourceManager::GetShader("rect");
-    Shader &font_shader = ResourceManager::GetShader("font");
-
-    background_rect.Render(rect_shader);
-    handle_rect.Render(rect_shader);
-    font.Render(name, 28, font_shader);
+    current_window->widget_rects.push_back(std::move(background_rect));
+    current_window->widget_rects.push_back(std::move(handle_rect));
+    current_window->widget_texts.push_back(std::move(text));
 }
 
 void Ui::TextBox(const std::string &name, std::string &text, UiVec2I size, UiVec2I position)
 {
     UiContext *context = GetContext();
 
-    const UiWindow *current_window = context->window_stack.Top();
+    UiWindow *current_window = context->window_stack.Top();
     position += current_window->position;
 
     const UiStyle &style = context->style;
 
-    Rect background_rect{position, size};
-    background_rect.SetColour({0.15f, 0.15f, 0.15f, 1.0f});
+    std::unique_ptr<Rect> background_rect = std::make_unique<Rect>(position, size);
+    background_rect->SetColour({0.15f, 0.15f, 0.15f, 1.0f});
 
     Shader &rect_shader = ResourceManager::GetShader("rect");
 
-    background_rect.Render(rect_shader);
+    current_window->widget_rects.push_back(std::move(background_rect));
 }
 
 UiStyle &Ui::GetStyle()

@@ -54,14 +54,15 @@ void UiStorage::SetInt(UiId key, int val)
     data.push_back(UiPair{key, val});
 }
 
-int UiStorage::GetInt(UiId key)
+int UiStorage::GetInt(UiId key) const
 {
-    std::vector<UiPair>::iterator it = std::lower_bound(data.begin(), data.end(), key);
+    for (const auto &item : data)
+    {
+        if (item.key == key)
+            return item.val_i;
+    }
 
-    if (it == data.end() || it->key != key)
-        return 0;
-
-    return it->val_i;
+    return 0;
 }
 
 void UiStorage::SetFloat(UiId key, float val)
@@ -69,14 +70,15 @@ void UiStorage::SetFloat(UiId key, float val)
     data.push_back(UiPair{key, val});
 }
 
-float UiStorage::GetFloat(UiId key)
+float UiStorage::GetFloat(UiId key) const
 {
-    std::vector<UiPair>::iterator it = std::lower_bound(data.begin(), data.end(), key);
+    for (const auto &item : data)
+    {
+        if (item.key == key)
+            return item.val_f;
+    }
 
-    if (it == data.end() || it->key != key)
-        return 0.0f;
-
-    return it->val_f;
+    return 0.0f;
 }
 
 void UiStorage::SetVoidPtr(UiId key, void *val)
@@ -84,7 +86,7 @@ void UiStorage::SetVoidPtr(UiId key, void *val)
     data.push_back(UiPair{key, val});
 }
 
-void *UiStorage::GetVoidPtr(UiId key)
+void *UiStorage::GetVoidPtr(UiId key) const
 {
     for (const auto &item : data)
     {
@@ -93,4 +95,9 @@ void *UiStorage::GetVoidPtr(UiId key)
     }
 
     return nullptr;
+}
+
+size_t UiStorage::GetSize() const
+{
+    return data.size();
 }
