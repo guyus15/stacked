@@ -47,6 +47,7 @@ struct UiContext
     std::vector<UiWindow *> windows;
     UiWindow *current_window;
     UiWindow *hot_window;
+    UiWindow *focused_window;
     UiInt current_z_index;
 };
 
@@ -380,7 +381,6 @@ void Ui::BeginFrame()
 {
     UiContext *context = GetContext();
     context->hot_id = 0;
-    context->hot_window = nullptr;
 
     UiWindow *window = context->current_window;
     if (window)
@@ -390,6 +390,7 @@ void Ui::BeginFrame()
 void Ui::EndFrame()
 {
     UiContext *context = GetContext();
+    context->hot_window = nullptr;
 
     UiWindow *hot_window = context->hot_window;
 
@@ -424,6 +425,8 @@ void Ui::EndFrame()
 
         if (Input::GetMouse(MouseButton::LeftMouse))
             window->position = mouse_pos - window->mouse_offset;
+
+        context->focused_window = window;
     }
 
     if (Input::GetMouseUp(MouseButton::LeftMouse))
@@ -514,7 +517,9 @@ bool Ui::Button(const std::string &name, UiVec2I size, UiVec2I position)
     button_rect->SetColour(style.button_colour_normal);
 
     bool hovered = false, pressed = false, held = false;
-    GetWidgetInteraction(*button_rect, name, &hovered, &pressed, &held);
+
+    if (context->hot_window == current_window)
+        GetWidgetInteraction(*button_rect, name, &hovered, &pressed, &held);
 
     if (hovered)
         button_rect->SetColour(style.button_colour_highlight);
@@ -555,7 +560,9 @@ void Ui::Checkbox(const std::string &name, bool &enabled, UiVec2I position)
     checkbox_rect->SetRadius(style.checkbox_radius);
 
     bool pressed = false;
-    GetWidgetInteraction(*checkbox_rect, name, nullptr, &pressed, nullptr);
+
+    if (context->hot_window == current_window)
+        GetWidgetInteraction(*checkbox_rect, name, nullptr, &pressed, nullptr);
 
     if (pressed)
         enabled = !enabled;
@@ -591,7 +598,8 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
 
     const float range = max_val - min_val;
 
-    GetWidgetInteraction(*background_rect, name, nullptr, nullptr, nullptr);
+    if (context->hot_window == current_window)
+        GetWidgetInteraction(*background_rect, name, nullptr, nullptr, nullptr);
 
     if (context->active_id == GetId(name))
     {
