@@ -1,9 +1,21 @@
 #ifndef UI_H
 #define UI_H
 
+#include "input.h"
 #include "types.h"
 
 #include <string>
+
+struct UiIO
+{
+    UiVec2I display_size;
+    float delta_time;
+
+    const char *platform_name;
+    void *platform_data;
+
+    UiInput input;
+};
 
 struct UiStyle
 {
@@ -52,6 +64,9 @@ namespace Ui
     void Checkbox(const std::string &name, bool &enabled, UiVec2I position);
     void SliderFloat(const std::string &name, float &current_val, float min_val, float max_val, UiVec2I position);
     void TextBox(const std::string &name, std::string &text, UiVec2I size, UiVec2I position);
+
+    // IO
+    UiIO &GetIO();
 
     // Styling
     UiStyle &GetStyle();

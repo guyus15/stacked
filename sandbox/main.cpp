@@ -4,8 +4,8 @@
 #include <glm/vec2.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 
-#include <stacked/input.h>
 #include <stacked/ui.h>
+#include <stacked/glfw_platform_data.h>
 
 #include <iostream>
 #include <cstdlib>
@@ -31,12 +31,6 @@ int main()
 
     glfwMakeContextCurrent(window);
 
-    Input::Initialise();
-
-    glfwSetKeyCallback(window, KeyCallback);
-    glfwSetMouseButtonCallback(window, MouseButtonCallback);
-    glfwSetCursorPosCallback(window, MousePositionCallback);
-
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cerr << "Error: Failed to initialise GLAD.\n";
@@ -44,11 +38,13 @@ int main()
     }
 
     Ui::Initialise();
+    Ui::InitialiseForGLFW(window);
 
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
+        Ui::BeginFrameForGLFW();
         Ui::BeginFrame();
 
         Ui::BeginWindow("Window", {300, 200}, {0, 0});
@@ -75,8 +71,6 @@ int main()
         Ui::EndWindow();
 
         Ui::EndFrame();
-
-        Input::Update();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

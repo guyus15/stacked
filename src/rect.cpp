@@ -1,7 +1,9 @@
 #include "rect.h"
-#include "vertex.h"
 
 #include "stacked/input.h"
+
+#include "ui_internal.h"
+#include "vertex.h"
 
 #include <glad/glad.h>
 
@@ -103,7 +105,7 @@ bool Rect::IsHovered(const UiVec2I offset, const UiVec2I padding) const
     UiVec2I bounds_position = offset + m_position;
     UiVec2I bounds_dimensions = padding + m_size;
 
-    UiVec2I mouse_pos = Input::GetMousePosition();
+    UiVec2I mouse_pos = GetContext()->io.input.GetMousePosition();
     // FIXME: Change this so that we aren't using a hard-coded value, but are using some
     // screen dimension value.
     mouse_pos.y = 600 - mouse_pos.y;

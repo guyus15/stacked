@@ -5,13 +5,13 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include "types.h"
+#include "stacked/types.h"
 
 #include <unordered_map>
 
 struct GLFWwindow;
 
-enum class KeyCode
+enum class UiKeyCode
 {
     Spacebar = 32,
     A = 65,
@@ -53,33 +53,30 @@ enum class KeyCode
     KeyCodeSize
 };
 
-enum class MouseButton
+enum class UiMouseButton
 {
     LeftMouse = 0,
     RightMouse = 1
 };
 
-enum class InputStatus;
+enum class UiInputStatus;
 
-class Input
+class UiInput
 {
 public:
-    /**
-     * \brief Initialises the input system by setting relevant keys to NotPressed.
-     */
-    static void Initialise();
+    UiInput();
 
     /**
      * \brief Called each frame of the application.
      */
-    static void Update();
+    void Update();
 
     /**
      * \brief Determines if the given key is being pressed.
      * \param key The given key.
      * \return True or false value depending on whether the given key is being pressed.
      */
-    static bool GetKey(KeyCode key);
+    bool GetKey(UiKeyCode key);
 
     /**
      * \brief Determines if the given key has been pressed down in the current frame.
@@ -87,7 +84,7 @@ public:
      * \return True or false value depending on whether the given key has been pressed
      * down in the current frame.
      */
-    static bool GetKeyDown(KeyCode key);
+    bool GetKeyDown(UiKeyCode key);
 
     /**
      * \brief Determines if the given key has been released in the current frame.
@@ -95,7 +92,7 @@ public:
      * \return True or false value depending on whether the given key has been
      * released in the current frame.
      */
-    static bool GetKeyUp(KeyCode key);
+    bool GetKeyUp(UiKeyCode key);
 
     /**
      * \brief Determines if the given key is being held down by looking at the state
@@ -104,81 +101,68 @@ public:
      * \return True or false value depending on whether the given key is being
      * held down.
      */
-    static bool GetKeyHeld(KeyCode key);
+    bool GetKeyHeld(UiKeyCode key);
 
     /**
      * \brief Determines if the given mouse button is being pressed.
      * \return True or false depending on whether the given mouse button is being pressed.
      */
-    static bool GetMouse(MouseButton button);
+    bool GetMouse(UiMouseButton button);
 
     /**
      * \brief Determines if the given mouse button has been pressed down in the current frame.
      * \return True or false depending on whether the given mouse button has been pressed down
      * in the current frame.
      */
-    static bool GetMouseDown(MouseButton key);
+    bool GetMouseDown(UiMouseButton key);
 
     /**
      * \brief Determines if the given mouse button has been released in the current frame.
      * \return True or false depending on whether the given mouse button has been released
      * in the current frame.
      */
-    static bool GetMouseUp(MouseButton key);
+    bool GetMouseUp(UiMouseButton key);
 
     /**
      * \brief Determines if the given mouse button is being held down by looking at the state
      * of the key in the previous and current frame.
      * \return True or false depending on whether the given mouse button is being held down.
      */
-    static bool GetMouseHeld(MouseButton key);
+    bool GetMouseHeld(UiMouseButton key);
 
     /**
      * \brief Gets the current mouse position.
      * \return The mouse's current position.
      */
-    static UiVec2I GetMousePosition();
-
-private:
-    Input() = default;
-
-    static Input &Get();
-    static Input s_instance;
-
-    std::unordered_map<KeyCode, InputStatus> m_key_input;
-    std::unordered_map<KeyCode, InputStatus> m_key_input_prev;
-    std::unordered_map<MouseButton, InputStatus> m_mouse_input;
-    std::unordered_map<MouseButton, InputStatus> m_mouse_input_prev;
-    UiVec2I m_mouse_position;
+    UiVec2I GetMousePosition();
 
     /**
      * \brief Called when the handling the GLFW key callback.
      * \param glfw_keycode The GLFW key code for the key event.
      * \param glfw_action The GLFW action for the key event.
      */
-    static void KeyCallbackUpdate(int glfw_keycode, int glfw_action);
+    void KeyCallbackUpdate(int glfw_keycode, int glfw_action);
 
     /**
      * \brief Called when handling the GLFW mouse position callback.
      * \param glfw_xpos The mouse's X position.
      * \param glfw_ypos The mouse's Y position.
      */
-    static void MouseButtonCallbackUpdate(int glfw_button, int glfw_action);
+    void MouseButtonCallbackUpdate(int glfw_button, int glfw_action);
 
     /**
      * \brief Called when handling the GLFW mouse button callback.
      * \param glfw_button The mouse button.
      * \param glfw_action The action of the mouse button.
      */
-    static void MousePositionCallbackUpdate(double glfw_xpos, double glfw_ypos);
+    void MousePositionCallbackUpdate(double glfw_xpos, double glfw_ypos);
 
-    friend void KeyCallback(GLFWwindow *, int, int, int, int);
-    friend void MouseButtonCallback(GLFWwindow *, int, int, int);
-    friend void MousePositionCallback(GLFWwindow *, double, double);
+private:
+    std::unordered_map<UiKeyCode, UiInputStatus> m_key_input;
+    std::unordered_map<UiKeyCode, UiInputStatus> m_key_input_prev;
+    std::unordered_map<UiMouseButton, UiInputStatus> m_mouse_input;
+    std::unordered_map<UiMouseButton, UiInputStatus> m_mouse_input_prev;
+    UiVec2I m_mouse_position;
 };
-
-void KeyCallback(GLFWwindow *, int, int, int, int);
-void MouseButtonCallback(GLFWwindow *, int, int, int);
-void MousePositionCallback(GLFWwindow *, double, double);
 
 #endif // INPUT_H

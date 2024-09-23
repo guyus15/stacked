@@ -6,117 +6,95 @@
 
 #include <GLFW/glfw3.h>
 
-enum class InputStatus
+enum class UiInputStatus
 {
     NotPressed = 0,
     Pressed = 1
 };
 
-Input Input::s_instance{};
-
-void Input::Initialise()
+UiInput::UiInput()
 {
-    for (int i = 0; i < static_cast<int>(KeyCode::KeyCodeSize); ++i)
+    for (int i = 0; i < static_cast<int>(UiKeyCode::KeyCodeSize); ++i)
     {
-        Get().m_key_input[static_cast<KeyCode>(i)] = InputStatus::NotPressed;
-        Get().m_key_input_prev[static_cast<KeyCode>(i)] = InputStatus::NotPressed;
+        m_key_input[static_cast<UiKeyCode>(i)] = UiInputStatus::NotPressed;
+        m_key_input_prev[static_cast<UiKeyCode>(i)] = UiInputStatus::NotPressed;
     }
 }
 
-void Input::Update()
+void UiInput::Update()
 {
-    Get().m_key_input_prev = Get().m_key_input;
-    Get().m_mouse_input_prev = Get().m_mouse_input;
+    m_key_input_prev = m_key_input;
+    m_mouse_input_prev = m_mouse_input;
 }
 
-bool Input::GetKey(const KeyCode key)
+bool UiInput::GetKey(const UiKeyCode key)
 {
-    return Get().m_key_input[key] == InputStatus::Pressed;
+    return m_key_input[key] == UiInputStatus::Pressed;
 }
 
-bool Input::GetKeyDown(const KeyCode key)
+bool UiInput::GetKeyDown(const UiKeyCode key)
 {
-    return Get().m_key_input[key] == InputStatus::Pressed &&
-           Get().m_key_input_prev[key] == InputStatus::NotPressed;
+    return m_key_input[key] == UiInputStatus::Pressed &&
+           m_key_input_prev[key] == UiInputStatus::NotPressed;
 }
 
-bool Input::GetKeyUp(const KeyCode key)
+bool UiInput::GetKeyUp(const UiKeyCode key)
 {
-    return Get().m_key_input[key] == InputStatus::NotPressed &&
-           Get().m_key_input_prev[key] == InputStatus::Pressed;
+    return m_key_input[key] == UiInputStatus::NotPressed &&
+           m_key_input_prev[key] == UiInputStatus::Pressed;
 }
 
-bool Input::GetKeyHeld(const KeyCode key)
+bool UiInput::GetKeyHeld(const UiKeyCode key)
 {
-    return Get().m_key_input[key] == InputStatus::Pressed &&
-           Get().m_key_input_prev[key] == InputStatus::Pressed;
+    return m_key_input[key] == UiInputStatus::Pressed &&
+           m_key_input_prev[key] == UiInputStatus::Pressed;
 }
 
-bool Input::GetMouse(const MouseButton button)
+bool UiInput::GetMouse(const UiMouseButton button)
 {
-    return Get().m_mouse_input[button] == InputStatus::Pressed;
+    return m_mouse_input[button] == UiInputStatus::Pressed;
 }
 
-bool Input::GetMouseDown(const MouseButton button)
+bool UiInput::GetMouseDown(const UiMouseButton button)
 {
-    return Get().m_mouse_input[button] == InputStatus::Pressed &&
-           Get().m_mouse_input_prev[button] == InputStatus::NotPressed;
+    return m_mouse_input[button] == UiInputStatus::Pressed &&
+           m_mouse_input_prev[button] == UiInputStatus::NotPressed;
 }
 
-bool Input::GetMouseUp(const MouseButton button)
+bool UiInput::GetMouseUp(const UiMouseButton button)
 {
-    return Get().m_mouse_input[button] == InputStatus::NotPressed &&
-           Get().m_mouse_input_prev[button] == InputStatus::Pressed;
+    return m_mouse_input[button] == UiInputStatus::NotPressed &&
+           m_mouse_input_prev[button] == UiInputStatus::Pressed;
 }
 
-bool Input::GetMouseHeld(const MouseButton button)
+bool UiInput::GetMouseHeld(const UiMouseButton button)
 {
-    return Get().m_mouse_input[button] == InputStatus::Pressed &&
-           Get().m_mouse_input_prev[button] == InputStatus::Pressed;
+    return m_mouse_input[button] == UiInputStatus::Pressed &&
+           m_mouse_input_prev[button] == UiInputStatus::Pressed;
 }
 
-UiVec2I Input::GetMousePosition()
+UiVec2I UiInput::GetMousePosition()
 {
-    return Get().m_mouse_position;
+    return m_mouse_position;
 }
 
-Input &Input::Get()
+void UiInput::KeyCallbackUpdate(const int glfw_keycode, const int glfw_action)
 {
-    return s_instance;
+    const auto keycode = static_cast<UiKeyCode>(glfw_keycode);
+    const auto input_status = glfw_action == GLFW_REPEAT ? UiInputStatus::Pressed : static_cast<UiInputStatus>(glfw_action);
+
+    m_key_input[keycode] = input_status;
 }
 
-void Input::KeyCallbackUpdate(const int glfw_keycode, const int glfw_action)
+void UiInput::MouseButtonCallbackUpdate(const int glfw_button, const int glfw_action)
 {
-    const auto keycode = static_cast<KeyCode>(glfw_keycode);
-    const auto input_status = glfw_action == GLFW_REPEAT ? InputStatus::Pressed : static_cast<InputStatus>(glfw_action);
+    const auto button = static_cast<UiMouseButton>(glfw_button);
+    const auto input_status = glfw_action == GLFW_REPEAT ? UiInputStatus::Pressed : static_cast<UiInputStatus>(glfw_action);
 
-    Get().m_key_input[keycode] = input_status;
+    m_mouse_input[button] = input_status;
 }
 
-void Input::MouseButtonCallbackUpdate(const int glfw_button, const int glfw_action)
+void UiInput::MousePositionCallbackUpdate(const double glfw_xpos, const double glfw_ypos)
 {
-    const auto button = static_cast<MouseButton>(glfw_button);
-    const auto input_status = glfw_action == GLFW_REPEAT ? InputStatus::Pressed : static_cast<InputStatus>(glfw_action);
-
-    Get().m_mouse_input[button] = input_status;
-}
-
-void Input::MousePositionCallbackUpdate(const double glfw_xpos, const double glfw_ypos)
-{
-    Get().m_mouse_position = {static_cast<int>(glfw_xpos), static_cast<int>(glfw_ypos)};
-}
-
-void KeyCallback(GLFWwindow *, const int keycode, int, const int action, int)
-{
-    Input::KeyCallbackUpdate(keycode, action);
-}
-
-void MouseButtonCallback(GLFWwindow *, const int button, const int action, int)
-{
-    Input::MouseButtonCallbackUpdate(button, action);
-}
-
-void MousePositionCallback(GLFWwindow *, const double xpos, const double ypos)
-{
-    Input::MousePositionCallbackUpdate(xpos, ypos);
+    m_mouse_position = {static_cast<int>(glfw_xpos), static_cast<int>(glfw_ypos)};
 }

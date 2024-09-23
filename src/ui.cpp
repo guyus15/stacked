@@ -1,10 +1,7 @@
 #include "stacked/ui.h"
-#include "stacked/input.h"
-#include "stacked/types.h"
 
-#include "font.h"
+#include "ui_internal.h"
 #include "rect.h"
-#include "resources.h"
 #include "text.h"
 
 #include <glm/ext/matrix_clip_space.hpp>
@@ -35,30 +32,7 @@ struct UiWindow
     std::vector<std::unique_ptr<UiText>> widget_texts;
 };
 
-struct UiContext
-{
-    bool initialised;
-    bool window_resizing;
-    UiStyle style;
-    UiFont font;
-    UiId hot_id;
-    UiId active_id;
-    UiInt current_z_index;
-    UiResources resources;
-    UiStack<UiWindow *> window_stack;
-    UiWindow *current_window;
-    UiWindow *hot_window;
-    UiWindow *focused_window;
-    std::vector<UiWindow *> windows;
-};
-
 UiContext *g_context = nullptr;
-
-static UiContext *GetContext()
-{
-    assert(g_context != nullptr);
-    return g_context;
-}
 
 static UiId GetId(const std::string &name)
 {
@@ -104,14 +78,16 @@ static void GetWidgetInteraction(const Rect &rect, bool *hovered, bool *pressed,
 {
     if (rect.IsHovered(offset, padding))
     {
+        UiIO &io = Ui::GetIO();
+
         if (hovered)
             *hovered = true;
 
-        if (Input::GetMouse(MouseButton::LeftMouse))
+        if (io.input.GetMouse(UiMouseButton::LeftMouse))
             if (held)
                 *held = true;
 
-        if (Input::GetMouseDown(MouseButton::LeftMouse))
+        if (io.input.GetMouseDown(UiMouseButton::LeftMouse))
         {
             if (pressed)
                 *pressed = true;
@@ -225,7 +201,9 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
     bool border_pressed = bl_press | br_press | bt_press | bb_press |
                           btl_press | btr_press | bbl_press | bbr_press;
 
-    UiVec2I mouse_pos = Input::GetMousePosition();
+    UiIO &io = Ui::GetIO();
+
+    UiVec2I mouse_pos = io.input.GetMousePosition();
     mouse_pos.y = 600 - mouse_pos.y;
 
     if (border_pressed)
@@ -429,14 +407,16 @@ void Ui::EndFrame()
         }
     }
 
-    UiVec2I mouse_pos = Input::GetMousePosition();
+    UiIO &io = GetIO();
+
+    UiVec2I mouse_pos = io.input.GetMousePosition();
     mouse_pos.y = 600 - mouse_pos.y;
 
     if (context->hot_window && context->active_id == 0)
     {
         UiWindow *window = context->hot_window;
 
-        if (Input::GetMouseDown(MouseButton::LeftMouse))
+        if (io.input.GetMouseDown(UiMouseButton::LeftMouse))
         {
             context->current_window = window;
             context->current_z_index += 1;
@@ -449,13 +429,13 @@ void Ui::EndFrame()
     {
         UiWindow *window = context->current_window;
 
-        if (Input::GetMouse(MouseButton::LeftMouse))
+        if (io.input.GetMouse(UiMouseButton::LeftMouse))
             window->position = mouse_pos - window->mouse_offset;
 
         context->focused_window = window;
     }
 
-    if (Input::GetMouseUp(MouseButton::LeftMouse))
+    if (io.input.GetMouseUp(UiMouseButton::LeftMouse))
     {
         context->active_id = 0;
         context->current_window = nullptr;
@@ -485,6 +465,8 @@ void Ui::EndFrame()
 
         window->widget_texts.clear();
     }
+
+    io.input.Update();
 }
 
 // TODO: Pass window flags in to modify the behaviour of the window.
@@ -626,7 +608,9 @@ void Ui::SliderFloat(const std::string &name, float &current_val, float min_val,
 
     if (context->active_id == GetId(name))
     {
-        UiVec2I mouse_pos = Input::GetMousePosition();
+        UiIO &io = Ui::GetIO();
+
+        UiVec2I mouse_pos = io.input.GetMousePosition();
         mouse_pos.y = 600 - mouse_pos.y;
 
         int new_pos_x = clamp(position.x, position.x + 200 - 20, mouse_pos.x - 10);
@@ -673,4 +657,14 @@ void Ui::TextBox(const std::string &name, std::string &text, UiVec2I size, UiVec
 UiStyle &Ui::GetStyle()
 {
     return g_context->style;
+}
+
+UiIO &Ui::GetIO()
+{
+    return g_context->io;
+}
+
+UiGlfwPlatformData_OpenGL *GetGlfwPlatformData_OpenGL()
+{
+    return (UiGlfwPlatformData_OpenGL *)Ui::GetIO().platform_data;
 }
