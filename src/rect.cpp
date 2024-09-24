@@ -105,10 +105,10 @@ bool Rect::IsHovered(const UiVec2I offset, const UiVec2I padding) const
     UiVec2I bounds_position = offset + m_position;
     UiVec2I bounds_dimensions = padding + m_size;
 
-    UiVec2I mouse_pos = GetContext()->io.input.GetMousePosition();
-    // FIXME: Change this so that we aren't using a hard-coded value, but are using some
-    // screen dimension value.
-    mouse_pos.y = 600 - mouse_pos.y;
+    UiIO &io = Ui::GetIO();
+
+    UiVec2I mouse_pos = io.input.GetMousePosition();
+    mouse_pos.y = io.display_size.y - mouse_pos.y;
 
     return mouse_pos.x < bounds_position.x + bounds_dimensions.x && mouse_pos.x > bounds_position.x &&
            mouse_pos.y < bounds_position.y + bounds_dimensions.y && mouse_pos.y > bounds_position.y;

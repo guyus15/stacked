@@ -124,9 +124,9 @@ void Shader::SetVec4(const std::string &name, const UiVec4F value) const
     glUniform4f(glGetUniformLocation(m_id, name.c_str()), value.x, value.y, value.z, value.w);
 }
 
-void Shader::SetMat4(const std::string &name, glm::mat4 &value) const
+void Shader::SetMat4(const std::string &name, const float *value) const
 {
-    glUniformMatrix4fv(glGetUniformLocation(m_id, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+    glUniformMatrix4fv(glGetUniformLocation(m_id, name.c_str()), 1, GL_FALSE, value);
 }
 
 GLint Shader::GetId() const

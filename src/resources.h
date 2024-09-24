@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 class Shader;
+class UiIO;
 
 class UiResources
 {
@@ -16,6 +17,8 @@ public:
                     const std::string &fragment_file_path);
 
     Shader &GetShader(const std::string &name);
+
+    void UpdateProjectionMatrices(UiIO &io);
 
 private:
     std::unordered_map<std::string, Shader> m_shaders;

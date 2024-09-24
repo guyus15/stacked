@@ -204,7 +204,7 @@ static void HandleWindowResizing(UiWindow *window, const std::string &name, cons
     UiIO &io = Ui::GetIO();
 
     UiVec2I mouse_pos = io.input.GetMousePosition();
-    mouse_pos.y = 600 - mouse_pos.y;
+    mouse_pos.y = io.display_size.y - mouse_pos.y;
 
     if (border_pressed)
     {
@@ -363,15 +363,11 @@ void Ui::Initialise()
     g_context->resources.LoadShader("font", "shaders/default.vs", "shaders/font.fs");
     g_context->resources.LoadShader("rect", "shaders/default.vs", "shaders/rect.fs");
 
-    glm::mat4 projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
-
     Shader &font_shader = g_context->resources.GetShader("font");
     font_shader.Use();
-    font_shader.SetMat4("projection", projection);
 
     Shader &rect_shader = g_context->resources.GetShader("rect");
     rect_shader.Use();
-    rect_shader.SetMat4("projection", projection);
 
     srand(time(nullptr));
 }
@@ -410,7 +406,7 @@ void Ui::EndFrame()
     UiIO &io = GetIO();
 
     UiVec2I mouse_pos = io.input.GetMousePosition();
-    mouse_pos.y = 600 - mouse_pos.y;
+    mouse_pos.y = io.display_size.y - mouse_pos.y;
 
     if (context->hot_window && context->active_id == 0)
     {

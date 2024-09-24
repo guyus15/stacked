@@ -1,6 +1,7 @@
 #include "resources.h"
-
 #include "shader.h"
+
+#include "stacked/ui.h"
 
 #include <fstream>
 #include <iostream>
@@ -55,4 +56,18 @@ Shader &UiResources::GetShader(const std::string &name)
     }
 
     return m_shaders[name];
+}
+
+void UiResources::UpdateProjectionMatrices(UiIO &io)
+{
+    const float projection[16] = {
+        2.0f / io.display_size.x, 0.0f, 0.0f, 0.0f,
+        0.0f, 2.0f / -io.display_size.y, 0.0f, 0.0f,
+        0.0f, 0.0f, -2.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f};
+
+    for (const auto &[_, shader] : m_shaders)
+    {
+        shader.SetMat4("projection", projection);
+    }
 }

@@ -106,7 +106,7 @@ public:
      * \param name The name of the uniform.
      * \param value The value to set the uniform to.
      */
-    void SetMat4(const std::string &name, glm::mat4 &value) const;
+    void SetMat4(const std::string &name, const float *value) const;
 
     /**
      * \brief Gets the ID of the shader program.

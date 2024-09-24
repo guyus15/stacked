@@ -30,6 +30,12 @@ void UiGlfwPlatformCallback_OpenGL_MousePosition(GLFWwindow *window, double x, d
     io.input.MousePositionCallbackUpdate(x, y);
 }
 
+void UiGLFWPlatformCallback_OpenGL_FramebufferResize(GLFWwindow *window, int width, int height)
+{
+    UiContext *context = GetContext();
+    context->resources.UpdateProjectionMatrices(context->io);
+}
+
 void Ui::InitialiseForGLFW(GLFWwindow *window)
 {
     UiIO &io = Ui::GetIO();
@@ -45,6 +51,9 @@ void Ui::InitialiseForGLFW(GLFWwindow *window)
     glfwSetKeyCallback(window, &UiGlfwPlatformCallback_OpenGL_Key);
     glfwSetMouseButtonCallback(window, &UiGlfwPlatformCallback_OpenGL_MouseButton);
     glfwSetCursorPosCallback(window, &UiGlfwPlatformCallback_OpenGL_MousePosition);
+    glfwSetFramebufferSizeCallback(window, &UiGLFWPlatformCallback_OpenGL_FramebufferResize);
+
+    context->resources.UpdateProjectionMatrices(io);
 }
 
 void Ui::BeginFrameForGLFW()
